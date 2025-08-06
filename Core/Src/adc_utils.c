@@ -1,0 +1,68 @@
+#include "adc_utils.h"
+#include "stm32f1xx_hal_adc.h"
+
+extern ADC_HandleTypeDef hadc1;
+volatile bool adc_dma_done;
+uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
+
+
+// ISR callback
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+	if (hadc->Instance == hadc1.Instance) {
+		adc_dma_done = true;
+	}
+}
+
+
+// 3) ترکیب برای manual read once
+
+bool manual_ADC_Enable(void) {
+	if(HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_CHANNEL_COUNT) != HAL_OK) {
+		HAL_ADC_Stop_DMA(&hadc1);
+		return false;
+	}
+	if (HAL_ADCEx_InjectedStart_IT(&hadc1) != HAL_OK) {
+		HAL_ADCEx_InjectedStop_IT(&hadc1);
+		HAL_ADC_Stop_DMA(&hadc1);
+		return false;
+	}
+	return true;
+}
+bool manual_ADC_Disable(void){
+	// Stop DMA
+	if (HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){
+		return false;
+	}
+	// Stop Injected Conversion interrupts
+	if (HAL_ADCEx_InjectedStop_IT(&hadc1) != HAL_OK){
+		return false;
+	}
+	return true;
+}
+bool DC_Voltage_Safety_Checker(void){
+	float voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);
+	if(voltage < 275 || voltage > 345){
+		return false;
+	}
+	return true;
+}
+float ADC_to_voltage(uint16_t adc){
+	if(adc != 0){
+		return (((float)adc / 4096) * 3.3) * 239.8 ;
+	}
+	return 0;
+}
+float ADC_to_temperture(uint16_t adc){
+	if(adc != 0){
+		return (((float)adc / 4096) * 3.3) * 20;
+	}
+	return 0;
+}
+bool Temperture_Safety_Checker(void){
+	float temperture1 = ADC_to_temperture(adc_dma_buffer[ADC_IDX_TEMP_CH1]);
+	float temperture2 = ADC_to_temperture(adc_dma_buffer[ADC_IDX_TEMP_CH2]);
+	if(temperture1 > 75 || temperture2 > 75){
+		return false;
+	}
+	return true;
+}

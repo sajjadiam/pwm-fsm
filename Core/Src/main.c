@@ -46,7 +46,6 @@
 //----------------------------pwm defines ended----------------------------------
 #define KEY_READ_PERIOD					50
 #define SOFT_START_READ_PERIOD	2
-#define STATE_NUM								7
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -102,12 +101,14 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
+
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
+
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
@@ -242,12 +243,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){ //1 us timer
 //timers NVIC callback
 //
 
-void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef* hadc) {
-	if (hadc->Instance == ADC1){
-		uint32_t injectedValue = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
-		// calculate current value
-	}
-}
+
 //
 //---------------------------------------------------
 //convert temperture values to sting for seven segment 
@@ -269,8 +265,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

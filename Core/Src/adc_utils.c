@@ -12,11 +12,28 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 		adc_dma_done = true;
 	}
 }
+void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+	if(hadc->Instance == ADC1) {
+		uint16_t raw = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
+		/* تبدیل مقدار خام به جریان و ذخیره در متغیر یا ساختار دلخواه */
+	}
+}
 
+/* واچ‌داگ: اگر مقدار از بازه‌ی تعیین‌شده خارج شد */
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
+{
+	if(hadc->Instance == ADC1) {
+		/* اقدام حفاظت: مثلاً خاموش کردن PWM یا اعلام خطا */
+	}
+}
 
 // 3) ترکیب برای manual read once
 
 bool manual_ADC_Enable(void) {
+	if(HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK){
+		return false;
+	}
 	if(HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_CHANNEL_COUNT) != HAL_OK) {
 		HAL_ADC_Stop_DMA(&hadc1);
 		return false;

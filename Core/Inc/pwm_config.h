@@ -22,12 +22,12 @@
  * @def PWM_START_FREQ
  * @brief Starting PWM frequency in Hertz.
  */
-#define PWM_START_FREQ      10000UL
+#define PWM_SOFT_START_START_FREQ      10000UL
 /**
  * @def PWM_END_FREQ
  * @brief Ending PWM frequency in Hertz.
  */
-#define PWM_END_FREQ        20000UL
+#define PWM_SOFT_START_END_FREQ        20000UL
 /**
  * @def PWM_CLK_FREQ
  * @brief Timer clock frequency in Hertz.
@@ -37,12 +37,12 @@
  * @def PWM_START_ARR
  * @brief Auto-reload register value at starting frequency.
  */
-#define PWM_START_ARR       ((PWM_CLK_FREQ / (2 * PWM_START_FREQ)) - 1U)
+#define PWM_START_ARR       ((PWM_CLK_FREQ / (2 * PWM_SOFT_START_START_FREQ)) - 1U)
 /**
  * @def PWM_END_ARR
  * @brief Auto-reload register value at ending frequency.
  */
-#define PWM_END_ARR         ((PWM_CLK_FREQ / (2 * PWM_END_FREQ)) - 1U)
+#define PWM_END_ARR         ((PWM_CLK_FREQ / (2 * PWM_SOFT_START_END_FREQ)) - 1U)
 /**
  * @def PWM_START_DEAD_TIME
  * @brief Dead time at the start (maximum value).
@@ -52,7 +52,7 @@
  * @def PWM_END_DEAD_TIME
  * @brief Dead time at the end (minimum value).
  */
-#define PWM_END_DEAD_TIME   75U
+#define PWM_END_DEAD_TIME   223U
 /**
  * @def PWM_SOFT_START_TIME
  * @brief Number of steps for soft start transition.
@@ -108,4 +108,8 @@
  * @brief Power-related dead time rate factor (scaling factor).
  */
 #define PWM_DT_PWR_RATE     0.2f
+#define	MAX_POWER													2000
+#define PWM_SOFT_START_LOWER_LIMIT_POWER	(uint16_t)(MAX_POWER * 0.25)
+#define PWM_SOFT_START_UPPER_LIMIT_POWER	(uint16_t)(MAX_POWER * 0.5)
+
 #endif // __PWM_CONFIG_H__

@@ -243,10 +243,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){ //1 us timer
 //
 
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef* hadc) {
-    if (hadc->Instance == ADC1) {
-        uint32_t injectedValue = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
-        // پردازش جریان
-    }
+	if (hadc->Instance == ADC1){
+		uint32_t injectedValue = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
+		// calculate current value
+	}
 }
 //
 //---------------------------------------------------

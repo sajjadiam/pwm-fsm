@@ -41,6 +41,7 @@ bool reset_PWM_control_variables(void){
 	pwmState.targetFreq 			= 0;
 	pwmState.currentDeadTime 	= 0;
 	pwmState.targetDeadTime 	= 0;
+	pwmState.targetPower			= 0;
 	return true;
 }
 bool clear_fault_flags(void){
@@ -75,28 +76,15 @@ bool manual_PWM_Enable(void){
 	HAL_PWM_Start();
 	return true;
 }
+bool set_PWM_control_variables(PWM_State_t* pwmState){
+	pwmState->currentFreq = PWM_SOFT_START_START_FREQ;//10kHz
+	pwmState->targetFreq = PWM_SOFT_START_END_FREQ;//20kHz
+	pwmState->currentDeadTime = PWM_START_DEAD_TIME; //14us
+	pwmState->targetDeadTime = PWM_END_DEAD_TIME;//7us
+	pwmState->targetPower = PWM_SOFT_START_UPPER_LIMIT_POWER;
+	return true;
+}
 //-----------------------------------------
-void pwm_init(PWM_State_t* pwmState){
-	pwmState->currentFreq = PWM_START_FREQ;
-	pwmState->targetFreq = PWM_END_FREQ;
-	pwmState->currentDeadTime = PWM_START_DEAD_TIME;
-	pwmState->targetDeadTime = PWM_END_DEAD_TIME;
-	pwmState->flags.ssFirstIn = PWM_FALSE;
-	pwmState->flags.softStarted = PWM_FALSE;
-	pwmState->flags.freqLock = PWM_FALSE;
-	pwmState->flags.dtLock = PWM_FALSE;
-	pwmState->flags.overPower = PWM_FALSE;
-	pwmState->flags.softStop = PWM_FALSE;
-	pwmState->flags.stateChange = PWM_FALSE;
-//	pwmState->currentState = PwmStateInit;
-	pwmState->flags.initDone = 1;
-	//setPwmState(pwmState,PwmStateSoftStart);
-}
-void Start_PWM_Safe(PWM_State_t* pwmState){
-	HAL_PWM_Init(PWM_START_FREQ);
-	HAL_PWM_SetDeadTime(pwmState->currentDeadTime);
-	HAL_PWM_Start();
-}
 void pwm_softStart(PWM_State_t* pwmState){
 	uint32_t arr;
 	uint32_t cmp;
@@ -106,7 +94,7 @@ void pwm_softStart(PWM_State_t* pwmState){
 	else{
 		if(pwmState->flags.ssFirstIn){
 			pwmState->flags.ssFirstIn = PWM_FALSE;
-			Start_PWM_Safe(pwmState);
+//			Start_PWM_Safe(pwmState);
 		}
 		else{
 			arr = HAL_PWM_GetARR();
@@ -161,11 +149,5 @@ void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 }
 //--------------------------
 void pwm_softStop(PWM_State_t* pwmState){
-	if(pwmState->flags.softStop && !pwmState->flags.freqLock){
-		Set_PWM_FrequencySmooth(pwmState);
-	}
-	else if(pwmState->flags.freqLock){
-		HAL_PWM_Stop();
-		pwm_init(pwmState);
-	}
+
 }

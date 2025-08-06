@@ -17,10 +17,10 @@ typedef struct{
 	GPIO_TypeDef* GPIOPort;   /**< GPIO port, e.g., GPIOA */
 	uint16_t GPIOPin;
 	POWER_MODE mode;
-}Mechnical_Part;
+}Mechanical_Part;
 
-extern Mechnical_Part mechParts[MECHANICAL_PARTS_END];
-void Mechnical_Part_Init(Mechnical_Part* mechanicalPart ,uint16_t len);
-void Mechnical_Part_Handler(Mechnical_Part* mechanicalPart ,POWER_MODE mode);
+extern Mechanical_Part mechParts[MECHANICAL_PARTS_END];
+void Mechnical_Part_Init(Mechanical_Part* mechanicalPart ,uint16_t len);
+void Mechnical_Part_Handler(Mechanical_Part* mechanicalPart ,POWER_MODE mode);
 
 #endif //__MECHANICAL_PART__

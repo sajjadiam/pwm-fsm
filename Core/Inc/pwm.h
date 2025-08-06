@@ -73,6 +73,8 @@ typedef struct{
 	float 						current;									// from adc chanel
 	uint32_t 					currentFreq;						// from arr
 	uint32_t 					targetFreq;						// clculate from 2 chanel of input capture
+	uint16_t					targetPower;
+	uint16_t					currentPower;
 	uint8_t 					currentDeadTime;				// calculate from dtg register 
 	uint8_t 					targetDeadTime;					// calculate from power & temperture & frequency
 }PWM_State_t;
@@ -81,8 +83,7 @@ extern PWM_State_t pwmState;
 extern uint32_t fsm_tick_us;
 extern ERROR_CODE errorCode;
 //functions
-void pwm_init(PWM_State_t* pwmState);																	//initial pwm structure
-void Start_PWM_Safe(PWM_State_t* pwmState);														//initial timer for safe starting
+
 void pwm_softStart(PWM_State_t* pwmState);														//soft start function
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState);									//Change the frequency to the target frequency slowly
 void pwm_softStop(PWM_State_t* pwmState);
@@ -99,4 +100,5 @@ bool Enable_ProtectionInterrupts(void);
 bool manual_Timers_Enable(void);
 bool set_PWM_frequency(uint16_t freq);
 bool manual_PWM_Enable(void);
+bool set_PWM_control_variables(PWM_State_t* pwmState);								//initial pwm structure
 #endif//__PWM_H__

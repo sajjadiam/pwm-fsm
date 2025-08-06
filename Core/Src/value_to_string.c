@@ -6,7 +6,7 @@
 const SevenSegmentModeHandler sevenSegmentModeHandler[SEVEN_SEGMENT_MODE_END] = {
 	
 };
-
+//convert Temperture value of float to string for use in seven segment
 void SevenSeg_TempertureConvertToString(char* str ,void* P){
 	PWM_State_t* pwm = (PWM_State_t*)P;
 	float temp = pwm->heatSinkTemp;
@@ -37,7 +37,7 @@ void Sevenseg_FrequencyConvertToString(char* str ,void* P){
 	PWM_State_t* pwm = (PWM_State_t*)P;
   snprintf(str ,6,"%2.1fH",((float)pwm->currentFreq / 1000)); //frequency in xx.x KHz
 }
-//convert Frequency value of float to string for use in seven segment
+//convert Current value of float to string for use in seven segment
 void Sevenseg_CurrentConvertToString(char* str ,void* P){
 	PWM_State_t* pwm = (PWM_State_t*)P;
 	float i = pwm->current;
@@ -48,17 +48,17 @@ void Sevenseg_CurrentConvertToString(char* str ,void* P){
 		snprintf(str ,6,"%2.1fA",i);//current in xx.x A
 	}
 }
-//convert Frequency value of float to string for use in seven segment
+//convert Voltage value of float to string for use in seven segment
 void Sevenseg_VoltageConvertToString(char* str ,void* P){
 	PWM_State_t* pwm = (PWM_State_t*)P;
 	snprintf(str ,6,"%3.0fU",pwm->voltage);//voltage in xxx V
 }
-//convert Frequency value of float to string for use in seven segment
+//convert State value of float to string for use in seven segment
 void Sevenseg_StateConvertToString(char* str ,void* P){
 	PWM_State_t* pwm = (PWM_State_t*)P;
 	snprintf(str ,5,"St%02d",pwm->currentState);
 }
-//convert Frequency value of float to string for use in seven segment
+//convert Error value of float to string for use in seven segment
 void Sevenseg_ErrorConvertToString(char* str ,void* P){
 	ERROR_CODE* code = (ERROR_CODE*)P;
 	if(*code < ERROR_CODE_Evt_Start){

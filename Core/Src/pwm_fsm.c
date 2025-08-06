@@ -49,7 +49,7 @@ const StateTransition_t transitions[TRANSITION_NUM] ={
 const uint32_t stateTimingTable_us[PwmStateEND] = {
 	[PwmStateStandby]        	= 50000,   	// 50ms
 	[PwmStateInit]           	= 1000,    	// 1ms
-	[PwmStateSoftStart]      	= 50000,		//
+	[PwmStateSoftStart]      	= 1000,			// 1ms
 	[PwmStateResonanceSweep]	= 50000,		//
 	[PwmStateRunning]        	= 50000,    // 
 	[PwmStateRecovery]        = 50000,		//
@@ -161,7 +161,7 @@ bool Action_EnterSoftStart(void){
 		return false;
 	}
 
-	if(!set_PWM_frequency(PWM_START_FREQ)){// 10kHz
+	if(!set_PWM_frequency(PWM_SOFT_START_START_FREQ)){// 10kHz
 		//error code
 		return false;
 	}
@@ -180,10 +180,9 @@ bool Action_EnterSoftStart(void){
 		//error code
 		return false;
 	}
-
+	set_PWM_control_variables(&pwmState);
 	Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Fan1],POWER_MODE_ON);
 	Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Fan2],POWER_MODE_ON);
-	
 	return true;
 }
 bool Action_StartSweep(void){
@@ -224,7 +223,7 @@ void stateInit(void){
 	if(!adc_dma_done){
 		return; // هنوز داده ADC نرسیده
   }
-	if(!DC_Voltage_Safety_Checker() | !Temperture_Safety_Checker()){
+	if(!DC_Voltage_Safety_Checker() || !Temperture_Safety_Checker()){
 		// مقادیر unsafe هستن، خطا بده
 		// PWM_FSM_HandleEvent(Evt_OverTempDetected) یا مشابه
 		return;
@@ -233,7 +232,49 @@ void stateInit(void){
 	EnqueueEvent(Evt_InitComplete);
 }
 void stateSoftStart(void){
-	
+	pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);    // ولتاژ باس
+//	pwmState.current = ADC_to_current(adc_dma_buffer[ADC_IDX_CURRENT]); // جریان
+	pwmState.currentPower = pwmState.voltage * pwmState.current;        // توان لحظه‌ای
+
+	/* 2) کنترل Dead‑Time بر اساس محدوده توان */
+	// اگر توان از سقف بالاتر رفت، Dead‑Time را زیاد کن (پالس باریک‌تر و توان کمتر)
+	if(pwmState.currentPower > PWM_SOFT_START_UPPER_LIMIT_POWER && pwmState.currentDeadTime < PWM_END_DEAD_TIME){
+		pwmState.currentDeadTime++;
+		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
+	}
+	// اگر توان از کف پایین‌تر رفت و هنوز به حداقل Dead‑Time نرسیده‌ایم، Dead‑Time را کم کن
+	else if(pwmState.currentPower < PWM_SOFT_START_LOWER_LIMIT_POWER && pwmState.currentDeadTime > PWM_START_DEAD_TIME){
+		pwmState.currentDeadTime--;
+		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
+	}
+	// اگر توان در محدودهٔ مجاز بود، به رَمپ خطی ادامه بده
+	else if(pwmState.currentDeadTime > pwmState.targetDeadTime){
+		pwmState.currentDeadTime--;
+		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
+	}
+
+	/* 3) محاسبه فرکانس متناسب با Dead‑Time جدید و تنظیم PWM */
+	// نگاشت خطی بین 10kHz-20kHz و DT=255-223
+	// ΔDT = PWM_START_DEAD_TIME - PWM_END_DEAD_TIME = 255-223 = 32
+	// Δf  = PWM_END_SOFT_START_FREQ - PWM_START_SOFT_START_FREQ = 20000-10000 = 10000
+	// f = f_start + ((DT_start - DT_now) * Δf / ΔDT)
+	uint16_t newFreq = (uint16_t)(
+			PWM_SOFT_START_START_FREQ +
+			(PWM_START_DEAD_TIME - pwmState.currentDeadTime) *
+			(PWM_SOFT_START_END_FREQ - PWM_SOFT_START_START_FREQ) /
+			(PWM_START_DEAD_TIME - PWM_END_DEAD_TIME)
+	);
+	// فقط اگر فرکانس واقعاً تغییر کرده آن را ست کن
+	if (newFreq != pwmState.currentFreq && newFreq <= pwmState.targetFreq) {
+		pwmState.currentFreq = newFreq;
+		set_PWM_frequency(pwmState.currentFreq);
+	}
+
+	/* 4) بررسی شرایط پایان Soft‑Start */
+	// وقتی به فرکانس هدف و Dead‑Time هدف رسیدیم، Soft‑Start تمام شده است
+	if(pwmState.currentDeadTime <= pwmState.targetDeadTime && pwmState.currentFreq >= pwmState.targetFreq){
+		EnqueueEvent(Evt_SoftStartDone);
+	}
 }
 void stateResonanceSweep(void){
 	

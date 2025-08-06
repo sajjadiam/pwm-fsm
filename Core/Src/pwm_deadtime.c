@@ -29,7 +29,7 @@ uint8_t DT_ConvertNsToDTG(double t_ns) {
 	// Region 1: (64 + x)*2*t_dts
 	ticks = (uint16_t)ceil(t_ns / (2 * t_dts));
 	if (ticks <= 127){
-		return (uint8_t)(64 + (ticks - 64));
+		return (uint8_t)(64 + ticks);
 	}
 	// Region 2: (32 + x)*8*t_dts
 	ticks = (uint16_t)ceil(t_ns / (8 * t_dts));
@@ -84,7 +84,7 @@ double DT_FromFreq(uint16_t freq_hz) {
 	if(freq_hz <= PWM_MIN_FREQ){
 		return PWM_BASE_DEAD_TIME;
 	}
-	double dt_ns = PWM_BASE_DEAD_TIME + (PWM_DEAD_TIME_PER_HZ * (double)(freq_hz - PWM_START_FREQ));
+	double dt_ns = PWM_BASE_DEAD_TIME + (PWM_DEAD_TIME_PER_HZ * (double)(freq_hz - PWM_SOFT_START_START_FREQ));
 	return dt_ns;
 }
 /**

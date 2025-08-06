@@ -233,7 +233,7 @@ void stateInit(void){
 }
 void stateSoftStart(void){
 	pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);    // ولتاژ باس
-//	pwmState.current = ADC_to_current(adc_dma_buffer[ADC_IDX_CURRENT]); // جریان
+	pwmState.current = ADC_to_current(adc_current_buffer); // جریان
 	pwmState.currentPower = pwmState.voltage * pwmState.current;        // توان لحظه‌ای
 
 	/* 2) کنترل Dead‑Time بر اساس محدوده توان */

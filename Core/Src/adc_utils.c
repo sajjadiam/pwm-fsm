@@ -1,10 +1,11 @@
 #include "adc_utils.h"
 #include "stm32f1xx_hal_adc.h"
+#include <math.h>
 
 extern ADC_HandleTypeDef hadc1;
 volatile bool adc_dma_done;
 uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
-
+uint16_t adc_current_buffer = 0;
 
 // ISR callback
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
@@ -12,17 +13,15 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 		adc_dma_done = true;
 	}
 }
-void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
-{
+void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance == ADC1) {
-		uint16_t raw = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
+		adc_current_buffer = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
 		/* تبدیل مقدار خام به جریان و ذخیره در متغیر یا ساختار دلخواه */
 	}
 }
 
 /* واچ‌داگ: اگر مقدار از بازه‌ی تعیین‌شده خارج شد */
-void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
-{
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance == ADC1) {
 		/* اقدام حفاظت: مثلاً خاموش کردن PWM یا اعلام خطا */
 	}
@@ -65,13 +64,19 @@ bool DC_Voltage_Safety_Checker(void){
 }
 float ADC_to_voltage(uint16_t adc){
 	if(adc != 0){
-		return (((float)adc / 4096) * 3.3) * 239.8 ;
+		float value = ((float)adc / ADC_MAX) * V_REF;
+		float voltage = value * VOLTAGE_GAIN;
+		return voltage;
 	}
 	return 0;
 }
 float ADC_to_temperture(uint16_t adc){
 	if(adc != 0){
-		return (((float)adc / 4096) * 3.3) * 20;
+		float V_adc = ((float)adc / ADC_MAX) * V_REF;
+		float R_ntc = R_FIXED * ((V_REF / V_adc) - 1.0);
+		float temp_kelvin = 1.0 / ((1.0 / T0) + (1.0 / B) * log(R_ntc / R0));
+		float temp_celsius = temp_kelvin - 273.15;
+		return temp_celsius;
 	}
 	return 0;
 }
@@ -82,4 +87,12 @@ bool Temperture_Safety_Checker(void){
 		return false;
 	}
 	return true;
+}
+float ADC_to_current(uint16_t adc){
+	if(adc != 0){
+		float value = ((float)adc / ADC_MAX) * V_REF;
+		float current = value * CURRENT_GAIN;
+		return current;
+	}
+	return 0;
 }

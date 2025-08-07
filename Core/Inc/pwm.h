@@ -50,7 +50,8 @@ typedef enum{
 	ERROR_CODE_End,
 }ERROR_CODE;
 typedef struct{												// flags of pwm
-	uint32_t freqLock	: 1;
+	uint32_t freqRampDone 	: 1;
+	uint32_t freqLock				: 1;
 }PWM_Flags;
 
 

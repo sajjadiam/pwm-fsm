@@ -232,34 +232,16 @@ void stateInit(void){
 	EnqueueEvent(Evt_InitComplete);
 }
 void stateSoftStart(void){
-	if(!softStart_set_freq_ramp()){
+	if(!pwmState.flags.freqRampDone){
+		if(!softStart_set_freq_ramp()){
+			return;
+		}
+		pwmState.flags.freqRampDone = PWM_TRUE;
+	}
+	else if(!softStart_tun_power()){
 		return;
 	}
-	if(!softStart_tun_power()){
-		
-	}
-	
-	// اگر توان از سقف بالاتر رفت، Dead‑Time را زیاد کن (پالس باریک‌تر و توان کمتر)
-	if(pwmState.currentPower > PWM_SOFT_START_UPPER_LIMIT_POWER && pwmState.currentDeadTime < PWM_END_DEAD_TIME){
-		pwmState.currentDeadTime++;
-		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
-	}
-	// اگر توان از کف پایین‌تر رفت و هنوز به حداقل Dead‑Time نرسیده‌ایم، Dead‑Time را کم کن
-	else if(pwmState.currentPower < PWM_SOFT_START_LOWER_LIMIT_POWER && pwmState.currentDeadTime > PWM_START_DEAD_TIME){
-		pwmState.currentDeadTime--;
-		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
-	}
-	// اگر توان در محدودهٔ مجاز بود، به رَمپ خطی ادامه بده
-	else if(pwmState.currentDeadTime > pwmState.targetDeadTime){
-		pwmState.currentDeadTime--;
-		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
-	}
-	// فقط اگر فرکانس واقعاً تغییر کرده آن را ست کن
-	/* 4) بررسی شرایط پایان Soft‑Start */
-	// وقتی به فرکانس هدف و Dead‑Time هدف رسیدیم، Soft‑Start تمام شده است
-	if(pwmState.currentDeadTime <= pwmState.targetDeadTime && pwmState.currentFreq >= pwmState.targetFreq){
-		EnqueueEvent(Evt_SoftStartDone);
-	}
+	EnqueueEvent(Evt_SoftStartDone);
 }
 void stateResonanceSweep(void){
 	

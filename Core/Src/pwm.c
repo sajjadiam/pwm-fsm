@@ -20,14 +20,7 @@ bool manual_Timers_Reset(void){
 	return true;
 }
 void reset_PWM_control_flags(void){
-	pwmState.flags.ssFirstIn = PWM_FALSE;
-	pwmState.flags.softStarted = PWM_FALSE;
 	pwmState.flags.freqLock = PWM_FALSE;
-	pwmState.flags.dtLock = PWM_FALSE;
-	pwmState.flags.overPower = PWM_FALSE;
-	pwmState.flags.softStop = PWM_FALSE;
-	pwmState.flags.stateChange = PWM_FALSE;
-	pwmState.flags.initDone = 1;
 }
 bool reset_PWM_control_variables(void){
 	
@@ -85,40 +78,50 @@ bool set_PWM_control_variables(PWM_State_t* pwmState){
 	return true;
 }
 //-----------------------------------------
-void pwm_softStart(PWM_State_t* pwmState){
-	uint32_t arr;
-	uint32_t cmp;
-	if(pwmState->flags.softStarted){
-		return;
-	}
-	else{
-		if(pwmState->flags.ssFirstIn){
-			pwmState->flags.ssFirstIn = PWM_FALSE;
-//			Start_PWM_Safe(pwmState);
-		}
-		else{
-			arr = HAL_PWM_GetARR();
-		}
-		arr -= PWM_SOFT_START_STEP;
-		if(arr < PWM_END_ARR){
-			arr = PWM_END_ARR;
-		}
-		pwmState->currentFreq = PWM_CLK_FREQ / ((arr + 1) * 2);
-		cmp = (arr + 1) / 2;
-		HAL_PWM_SetARR(arr);
-		HAL_PWM_SetCompare(TIM_CHANNEL_1,cmp);
-		HAL_PWM_SetCompare(TIM_CHANNEL_2,cmp);
+bool softStart_set_freq_ramp(void){
+	uint32_t arr = HAL_PWM_GetARR();
 
-		if (pwmState->currentDeadTime > pwmState->targetDeadTime) {
-			pwmState->currentDeadTime--;
-		}
-		HAL_PWM_SetDeadTime(pwmState->currentDeadTime);
-
-		if(arr == PWM_END_ARR && pwmState->currentDeadTime == PWM_END_DEAD_TIME){
-			pwmState->flags.softStarted = PWM_TRUE;
-			//setPwmState(pwmState,PwmStateRunning);
-		}
+	arr -= PWM_SOFT_START_STEP; // step => 6 
+	if(arr < PWM_END_ARR){
+		arr = PWM_END_ARR;
 	}
+	pwmState.currentFreq = PWM_CLK_FREQ / ((arr + 1) * 2);
+	uint32_t cmp = (arr + 1) / 2;
+
+	HAL_PWM_SetARR(arr);
+	HAL_PWM_SetCompare(TIM_CHANNEL_1,cmp);
+	HAL_PWM_SetCompare(TIM_CHANNEL_2,cmp);
+	//---------------------
+	if (pwmState.currentDeadTime > pwmState.targetDeadTime && (arr % 56 == 0)) {
+		pwmState.currentDeadTime--;
+	}
+	if(pwmState.currentDeadTime < pwmState.targetDeadTime){
+		pwmState.currentDeadTime = pwmState.targetDeadTime;
+	}
+	HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
+
+	if(arr <= PWM_END_ARR && pwmState.currentDeadTime <= PWM_END_DEAD_TIME){
+		return true;
+	}
+	return false;
+}
+bool softStart_tun_power(void){
+	pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);    // ولتاژ باس
+	pwmState.current = ADC_to_current(adc_current_buffer); 							// جریان
+	pwmState.currentPower = pwmState.voltage * pwmState.current;        // توان لحظه‌ای
+	if(pwmState.currentPower > PWM_SOFT_START_LOWER_LIMIT_POWER && pwmState.currentPower < PWM_SOFT_START_UPPER_LIMIT_POWER){
+		EnqueueEvent(Evt_SoftStartDone);
+		return true;
+	}
+	else if(pwmState.currentPower < PWM_SOFT_START_LOWER_LIMIT_POWER){
+		pwmState.currentDeadTime--;
+		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
+	}
+	else if(pwmState.currentPower > PWM_SOFT_START_UPPER_LIMIT_POWER){
+		pwmState.currentDeadTime++;
+		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
+	}
+	return false;
 }
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 	uint32_t arr =  HAL_PWM_GetARR();

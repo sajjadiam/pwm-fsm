@@ -32,7 +32,7 @@
  * @def PWM_CLK_FREQ
  * @brief Timer clock frequency in Hertz.
  */
-#define PWM_CLK_FREQ        72000000UL
+#define PWM_CLK_FREQ        72000000UL//Hz
 /**
  * @def PWM_START_ARR
  * @brief Auto-reload register value at starting frequency.
@@ -47,17 +47,17 @@
  * @def PWM_START_DEAD_TIME
  * @brief Dead time at the start (maximum value).
  */
-#define PWM_START_DEAD_TIME 255U
+#define PWM_START_DEAD_TIME 255U//value of dtg register
 /**
  * @def PWM_END_DEAD_TIME
  * @brief Dead time at the end (minimum value).
  */
-#define PWM_END_DEAD_TIME   223U
+#define PWM_END_DEAD_TIME   223U//value of dtg register
 /**
  * @def PWM_SOFT_START_TIME
  * @brief Number of steps for soft start transition.
  */
-#define PWM_SOFT_START_TIME (PWM_START_DEAD_TIME - PWM_END_DEAD_TIME)
+#define PWM_SOFT_START_TIME 300//ms
 /**
  * @def PWM_SOFT_START_STEP
  * @brief Auto-reload register decrement per soft start step.

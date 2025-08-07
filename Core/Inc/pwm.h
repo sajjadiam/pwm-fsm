@@ -50,18 +50,7 @@ typedef enum{
 	ERROR_CODE_End,
 }ERROR_CODE;
 typedef struct{												// flags of pwm
-	uint16_t initDone   	:1;
-	uint16_t ssFirstIn   	:1;
-	uint16_t softStarted 	:1;
-	uint16_t freqLock    	:1;
-	uint16_t dtLock     	:1;
-	uint16_t overPower   	:1;
-	uint16_t softStop    	:1;
-	uint16_t Stopcomplete :1;
-	uint16_t stateChange 	:1;
-	uint16_t faultActive  :1;
-	uint16_t pwmEnabled   :1;
-	uint16_t manualStop   :1;
+	uint32_t freqLock	: 1;
 }PWM_Flags;
 
 
@@ -84,7 +73,6 @@ extern uint32_t fsm_tick_us;
 extern ERROR_CODE errorCode;
 //functions
 
-void pwm_softStart(PWM_State_t* pwmState);														//soft start function
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState);									//Change the frequency to the target frequency slowly
 void pwm_softStop(PWM_State_t* pwmState);
 
@@ -96,6 +84,8 @@ void reset_PWM_control_flags(void);
 bool reset_PWM_control_variables(void);
 bool clear_fault_flags(void);
 bool Enable_ProtectionInterrupts(void);
+bool softStart_set_freq_ramp(void);
+bool softStart_tun_power(void);
 //----------------------------------
 bool manual_Timers_Enable(void);
 bool set_PWM_frequency(uint16_t freq);

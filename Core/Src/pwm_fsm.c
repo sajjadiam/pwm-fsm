@@ -232,11 +232,13 @@ void stateInit(void){
 	EnqueueEvent(Evt_InitComplete);
 }
 void stateSoftStart(void){
-	pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);    // ولتاژ باس
-	pwmState.current = ADC_to_current(adc_current_buffer); // جریان
-	pwmState.currentPower = pwmState.voltage * pwmState.current;        // توان لحظه‌ای
-
-	/* 2) کنترل Dead‑Time بر اساس محدوده توان */
+	if(!softStart_set_freq_ramp()){
+		return;
+	}
+	if(!softStart_tun_power()){
+		
+	}
+	
 	// اگر توان از سقف بالاتر رفت، Dead‑Time را زیاد کن (پالس باریک‌تر و توان کمتر)
 	if(pwmState.currentPower > PWM_SOFT_START_UPPER_LIMIT_POWER && pwmState.currentDeadTime < PWM_END_DEAD_TIME){
 		pwmState.currentDeadTime++;
@@ -252,24 +254,7 @@ void stateSoftStart(void){
 		pwmState.currentDeadTime--;
 		HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
 	}
-
-	/* 3) محاسبه فرکانس متناسب با Dead‑Time جدید و تنظیم PWM */
-	// نگاشت خطی بین 10kHz-20kHz و DT=255-223
-	// ΔDT = PWM_START_DEAD_TIME - PWM_END_DEAD_TIME = 255-223 = 32
-	// Δf  = PWM_END_SOFT_START_FREQ - PWM_START_SOFT_START_FREQ = 20000-10000 = 10000
-	// f = f_start + ((DT_start - DT_now) * Δf / ΔDT)
-	uint16_t newFreq = (uint16_t)(
-			PWM_SOFT_START_START_FREQ +
-			(PWM_START_DEAD_TIME - pwmState.currentDeadTime) *
-			(PWM_SOFT_START_END_FREQ - PWM_SOFT_START_START_FREQ) /
-			(PWM_START_DEAD_TIME - PWM_END_DEAD_TIME)
-	);
 	// فقط اگر فرکانس واقعاً تغییر کرده آن را ست کن
-	if (newFreq != pwmState.currentFreq && newFreq <= pwmState.targetFreq) {
-		pwmState.currentFreq = newFreq;
-		set_PWM_frequency(pwmState.currentFreq);
-	}
-
 	/* 4) بررسی شرایط پایان Soft‑Start */
 	// وقتی به فرکانس هدف و Dead‑Time هدف رسیدیم، Soft‑Start تمام شده است
 	if(pwmState.currentDeadTime <= pwmState.targetDeadTime && pwmState.currentFreq >= pwmState.targetFreq){

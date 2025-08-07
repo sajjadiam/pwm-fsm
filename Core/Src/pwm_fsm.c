@@ -186,6 +186,9 @@ bool Action_EnterSoftStart(void){
 	return true;
 }
 bool Action_StartSweep(void){
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3); //start input capture
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4); //start input capture
+	
 	return true;
 }  
 bool Action_EnterRunning(void){
@@ -244,7 +247,23 @@ void stateSoftStart(void){
 	EnqueueEvent(Evt_SoftStartDone);
 }
 void stateResonanceSweep(void){
-	
+	if(!captureReadyCh3 || !captureReadyCh4){
+		return;
+	}
+	if(captureReadyCh3 && captureReadyCh4){
+		HAL_TIM_IC_Stop_IT(&htim1, TIM_CHANNEL_3);
+		HAL_TIM_IC_Stop_IT(&htim1, TIM_CHANNEL_4);
+		//بررسي پايداري نتيجه ها   که در صورت پايدار نبودن افزايش توان و نمونه گيري مجدد
+		// ميانگين گيري از نمونه ها 
+		// پردازش نتايج 
+		//   حرکت به سمت رزونانس (افزايش يا کاهش فرکانس 
+		// تغيير فرکانس 
+		// ريست فلگ ها و نمونه گيري مجدد
+		HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3); //start input capture
+		HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4); //start input capture
+		// چک کردن و قفل فرکانس  در غير اينصورت بازگشت و نمونه گيري مجدد
+	}
+	EnqueueEvent(Evt_ResonanceFound);
 }
 void stateRunning(void){
 	

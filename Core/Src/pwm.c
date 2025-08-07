@@ -98,6 +98,7 @@ bool softStart_set_freq_ramp(void){
 	HAL_PWM_SetCompare(TIM_CHANNEL_2,cmp);
 	//---------------------
 	if(softStart_arrCounter >= 56){
+		softStart_arrCounter -= 56;
 		if (pwmState.currentDeadTime > pwmState.targetDeadTime) {
 			pwmState.currentDeadTime--;
 		}
@@ -106,7 +107,7 @@ bool softStart_set_freq_ramp(void){
 		pwmState.currentDeadTime = pwmState.targetDeadTime;
 	}
 	HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
-	softStart_arrCounter++;
+	softStart_arrCounter += PWM_SOFT_START_STEP;
 	return false;
 }
 bool softStart_tun_power(void){
@@ -155,4 +156,32 @@ void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 //--------------------------
 void pwm_softStop(PWM_State_t* pwmState){
 
+}
+
+
+volatile uint32_t CapturebuffCh3 [SAMPLE_NUM];
+volatile uint32_t CaptureCounterCh3 = 0;
+volatile uint32_t CapturebuffCh4 [SAMPLE_NUM];
+volatile uint32_t CaptureCounterCh4 = 0;
+volatile bool captureReadyCh3 = false;
+volatile bool captureReadyCh4 = false;
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
+	if(htim->Instance == TIM1){  
+		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3){
+			CapturebuffCh3[CaptureCounterCh3] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
+			CaptureCounterCh3++;
+			if(CaptureCounterCh3 >= SAMPLE_NUM){
+				captureReadyCh3 = true;
+				CaptureCounterCh3 = 0;
+			}
+		}
+		else if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4){
+			CapturebuffCh4[CaptureCounterCh4] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4);
+			CaptureCounterCh4++;
+			if(CaptureCounterCh4 >= SAMPLE_NUM){
+				captureReadyCh4 = true;
+				CaptureCounterCh4 = 0;
+			}
+		}
+	}
 }

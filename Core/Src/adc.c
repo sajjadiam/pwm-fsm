@@ -104,7 +104,6 @@ void MX_ADC1_Init(void)
   sConfigInjected.InjectedNbrOfConversion = 1;
   sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_13CYCLES_5;
   sConfigInjected.ExternalTrigInjecConv = ADC_EXTERNALTRIGINJECCONV_T1_TRGO;
-	
   sConfigInjected.AutoInjectedConv = DISABLE;
   sConfigInjected.InjectedDiscontinuousConvMode = DISABLE;
   sConfigInjected.InjectedOffset = 0;

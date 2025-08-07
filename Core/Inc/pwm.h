@@ -11,7 +11,7 @@
 #include "adc_utils.h"
 //defines
 
-
+#define SAMPLE_NUM		20
 //typedefs
 typedef uint16_t Counter;
 typedef bool FLAG;
@@ -72,6 +72,11 @@ typedef struct{
 extern PWM_State_t pwmState;
 extern uint32_t fsm_tick_us;
 extern ERROR_CODE errorCode;
+
+extern volatile bool captureReadyCh3;
+extern volatile bool captureReadyCh4;
+extern volatile uint32_t CapturebuffCh4 [SAMPLE_NUM];
+extern volatile uint32_t CapturebuffCh3 [SAMPLE_NUM];
 //functions
 
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState);									//Change the frequency to the target frequency slowly

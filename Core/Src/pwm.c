@@ -185,3 +185,17 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 		}
 	}
 }
+uint32_t captureDiffHandler(uint32_t* time){
+	uint32_t diffSum = 0;
+	uint32_t t_prev = CapturebuffCh3[0];
+	uint32_t period_sum = 0;
+	for(int i=1; i<SAMPLE_NUM; i++){
+    uint32_t t = CapturebuffCh3[i];
+    uint32_t diff = (t >= t_prev) ? (t - t_prev)
+                                  : ((htim1.Init.Period + 1) - t_prev + t);
+    period_sum += diff;
+    t_prev = t;
+}
+	float avgPeriod = (float)period_sum / (SAMPLE_NUM-1);
+	return diffSum;
+}

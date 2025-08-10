@@ -44,8 +44,9 @@
 
 
 //----------------------------pwm defines ended----------------------------------
-#define KEY_READ_PERIOD					50
-#define SOFT_START_READ_PERIOD	2
+#define KEY_READ_PERIOD							50
+#define SEVEN_SEGMENT_UPDATE_PERIOD	4
+#define SOFT_START_READ_PERIOD			2
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -69,6 +70,7 @@ const State_Machine_Func stateFunc[PwmStateEND] = {
 	[PwmStateHardStop]				= stateHardStop
 };
 static Counter keyCounter =0;
+static Counter sevenSegCounter =0;
 static FLAG keyRead = false;
 static FLAG hardFaultFlag = false;
 static FLAG sevenSegUpdateFlag = false;
@@ -128,9 +130,10 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-//	pwm_init(&pwmState);
 	SevenSeg_HandleTypeDef h7seg;
 	SevenSeg_Init(&h7seg);
+	manual_ADC_Enable();
+	HAL_TIM_Base_Start_IT(&htim2);
   while (1)
   {
 		if(hardFaultFlag){
@@ -146,9 +149,14 @@ int main(void)
 			stateMachineFlag = false;
 			stateFunc[pwmState.currentState]();
 		}
+		if(adc_dma_done){
+			adc_dma_done = false;
+			pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);
+			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_CHANNEL_COUNT);
+		} 
 		if(sevenSegUpdateFlag){
 			sevenSegUpdateFlag = 0;
-			
+			//Sevenseg_VoltageConvertToString(buffer,&pwmState); بايد تابع متغيير بذارم
 			SevenSeg_BufferUpdate(&h7seg,buffer);
 			SevenSeg_Update(&h7seg);
 		}
@@ -156,6 +164,7 @@ int main(void)
 			keyRead = false;
 			keyAct[pwmState.currentState]();
 		}
+	
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -236,6 +245,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){ //1 us timer
 		if(keyCounter++ >= KEY_READ_PERIOD){
 			keyCounter = 0;
 			keyRead = true;
+		}
+		if(sevenSegCounter++ >= SEVEN_SEGMENT_UPDATE_PERIOD){
+			sevenSegCounter = 0;
+			sevenSegUpdateFlag = true;
 		}
 	}
 	

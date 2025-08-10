@@ -226,10 +226,14 @@ void stateInit(void){
 	if(!adc_dma_done){
 		return; // هنوز داده ADC نرسیده
   }
-	if(!DC_Voltage_Safety_Checker() || !Temperture_Safety_Checker()){
+	if(!DC_Voltage_Safety_Checker()){
+		
 		// مقادیر unsafe هستن، خطا بده
 		// PWM_FSM_HandleEvent(Evt_OverTempDetected) یا مشابه
 		return;
+	}
+	if(!Temperture_Safety_Checker()){
+		
 	}
 	manual_ADC_Disable();
 	EnqueueEvent(Evt_InitComplete);

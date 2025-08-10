@@ -57,7 +57,7 @@ bool manual_ADC_Disable(void){
 }
 bool DC_Voltage_Safety_Checker(void){
 	float voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);
-	if(voltage < 275 || voltage > 345){
+	if(voltage < 250 || voltage > 345){
 		return false;
 	}
 	return true;

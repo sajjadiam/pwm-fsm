@@ -12,7 +12,7 @@
 
 #define CURRENT_GAIN					18
 
-#define VOLTAGE_GAIN					129 // andaze giri daghigh
+#define VOLTAGE_GAIN					122 // Practical measured value
 
 #define R0 				10000.0      // 10KO at 25°C
 #define B 				3950.0        // B value

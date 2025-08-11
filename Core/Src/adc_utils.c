@@ -91,7 +91,9 @@ bool Temperture_Safety_Checker(void){
 float ADC_to_current(uint16_t adc){
 	if(adc != 0){
 		float value = ((float)adc / ADC_MAX) * V_REF;
-		float current = value * CURRENT_GAIN;
+//		value -= CURRENT_OFFSET;
+		double Vsh = value / OPAMP_GAIN;
+		float current = Vsh * SHUNT_RESISTOR_VALUE;
 		return current;
 	}
 	return 0;

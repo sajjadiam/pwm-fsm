@@ -10,16 +10,32 @@
 #define ADC_IDX_TEMP_CH2    	2
 #define ADC_DMA_CHANNEL_COUNT 3
 
-#define CURRENT_GAIN					18
+
 
 #define VOLTAGE_GAIN					122 // Practical measured value
 
-#define R0 				10000.0      // 10KO at 25°C
-#define B 				3950.0        // B value
-#define T0 				298.15       // 25°C in Kelvin
-#define R_FIXED 	10000.0 // ?????? ???? ???? ????? ???????
-#define ADC_MAX 	4095.0  // ??? ADC 12 ???? ????
-#define V_REF 		3.3       // ????? ???? ADC
+#define R0 				10000.0f      	// 10KO at 25°C
+#define B 				3950.0f        	// B value
+#define T0 				298.15f      		// 25°C in Kelvin
+#define R_FIXED 	10000.0f 				// ?????? ???? ???? ????? ???????
+#define ADC_MAX 	4095.0f  				// ??? ADC 12 ???? ????
+#define V_REF 		3.3f       			// ????? ???? ADC
+
+#define OPAMP_GAIN						10
+#define OPAMP_OUTPUT_OFFSET		(0.0003 * 10)
+#define ISO_GAIN							4
+
+#define SHUNT_RESISTOR_VALUE	0.001
+#define MAX_CURRENT						12.0f
+
+#define V_PER_A        0.040f          // 40 mV/A (GAIN TLV=10, AMC single=×4)
+#define COUNTS_PER_V   (ADC_MAX/V_REF)
+#define COUNTS_PER_A   (V_PER_A * COUNTS_PER_V)
+
+//uint16_t zero_code = measure_adc_zero(); // ??????? ??? ????? ?? ???????
+//float    I_limit_A  = 12.0f;
+
+//uint16_t awd_high = zero_code + (uint16_t)(COUNTS_PER_A * I_limit_A + 0.5f);
 
 extern uint16_t adc_current_buffer;
 extern uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];

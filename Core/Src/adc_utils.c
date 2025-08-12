@@ -3,10 +3,23 @@
 #include <math.h>
 
 extern ADC_HandleTypeDef hadc1;
-volatile bool adc_dma_done;
+volatile bool adc_dma_done = 0;
+volatile bool adc_inject_done = 0;
 uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
-uint16_t adc_current_buffer = 0;
-
+uint32_t InjectTrigger = 0;											//Inject mode Trigger buffer
+uint16_t currentSample[SAMPLE_NUM] = {0};				//adc sample buffer
+uint16_t currentSampleCounter = 0;							//counter of sample number
+uint32_t currentOffset = 0; 										//ADC no-load value or ADC offset
+ADC_Current_Calibrate_Mode calibrateMode = ADC_Current_Calibrate_Mode_GetTrig; //clibrate mode handler
+adc_funk calbrateurrentOffset_machine[ADC_Current_Calibrate_Mode_End] = {
+	ADC_GetTrig			,
+	ADC_SetTrig			,
+	ADC_Start				,
+	ADC_Sampling		,
+	ADC_Processing	,
+	ADC_ResetTrig		,
+	ADC_Finishing		,
+};
 // ISR callback
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	if (hadc->Instance == hadc1.Instance) {
@@ -15,7 +28,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 }
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance == ADC1) {
-		adc_current_buffer = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
+		adc_inject_done = true;
 		/* تبدیل مقدار خام به جریان و ذخیره در متغیر یا ساختار دلخواه */
 	}
 }
@@ -97,4 +110,87 @@ float ADC_to_current(uint16_t adc){
 		return current;
 	}
 	return 0;
+}
+//----------------------------
+uint32_t get_ADC_inject_trigger(ADC_HandleTypeDef* hadc){
+	return hadc->Instance->CR2 & ADC_CR2_JEXTSEL;
+}
+HAL_StatusTypeDef ADC_inject_set_trigger(ADC_HandleTypeDef* hadc, uint32_t injectTrigger){
+	HAL_ADCEx_InjectedStop_IT(hadc);
+	HAL_ADC_Stop_DMA(hadc);        
+  HAL_ADC_Stop(hadc);
+	MODIFY_REG(hadc->Instance->CR2, ADC_CR2_JEXTSEL, injectTrigger);
+	if((hadc->Instance->CR2 & ADC_CR2_JEXTSEL) == injectTrigger){
+		return HAL_OK;
+	}
+	return HAL_ERROR;
+}
+uint16_t measure_adc_zero(void){
+	
+	return 0;
+}
+HAL_StatusTypeDef ADC_currentChannelCalibrate(void){
+	calbrateurrentOffset_machine[calibrateMode]();
+	if(calibrateMode == ADC_Current_Calibrate_Mode_Finishing){
+		return HAL_OK;
+	}
+	return HAL_ERROR;
+}
+void ADC_GetTrig		(void){
+	InjectTrigger = get_ADC_inject_trigger(ADC_CURRENT_UNIT);
+	calibrateMode = ADC_Current_Calibrate_Mode_SetTrig;
+	return;
+}
+void ADC_SetTrig		(void){
+	if(ADC_inject_set_trigger(ADC_CURRENT_UNIT ,ADC_INJECTED_SOFTWARE_START) != HAL_OK){
+		//set error code
+		return;
+	}
+	calibrateMode = ADC_Current_Calibrate_Mode_Start;
+	return;
+}
+void ADC_Start			(void){
+	if(HAL_ADCEx_InjectedStart_IT(ADC_CURRENT_UNIT) != HAL_OK){
+		//set error code
+		return;
+	}
+	calibrateMode = ADC_Current_Calibrate_Mode_Sampling;
+	return;
+}
+void ADC_Sampling		(void){
+	if(adc_inject_done && currentSampleCounter < SAMPLE_NUM){
+		adc_inject_done = false;
+		currentSample[currentSampleCounter] = HAL_ADCEx_InjectedGetValue(ADC_CURRENT_UNIT, ADC_INJECTED_RANK_1);
+		currentSampleCounter++;
+		return;
+	}
+	else if(currentSampleCounter >= SAMPLE_NUM){
+		if(HAL_ADCEx_InjectedStop_IT(ADC_CURRENT_UNIT) != HAL_OK){
+			//set error code
+			return;
+		}
+		currentSampleCounter = 0;
+		calibrateMode = ADC_Current_Calibrate_Mode_Processing;
+		return;
+	}
+}
+void ADC_Processing	(void){
+	uint32_t sampleSum = 0;
+	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+		sampleSum += currentSample[i];
+	}
+	currentOffset = sampleSum / SAMPLE_NUM;
+	calibrateMode = ADC_Current_Calibrate_Mode_ResetTrig;
+	return;
+}
+void ADC_ResetTrig	(void){
+	if(ADC_inject_set_trigger(ADC_CURRENT_UNIT ,InjectTrigger) != HAL_OK){
+		//set error code
+		return;
+	}
+	calibrateMode = ADC_Current_Calibrate_Mode_Finishing;
+	return;
+}
+void ADC_Finishing	(void){
+	//do noting
 }

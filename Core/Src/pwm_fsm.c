@@ -235,6 +235,9 @@ void stateInit(void){
 	if(!Temperture_Safety_Checker()){
 		
 	}
+	if(ADC_currentChannelCalibrate() != HAL_OK){
+		return;
+	}
 	manual_ADC_Disable();
 	EnqueueEvent(Evt_InitComplete);
 }

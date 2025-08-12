@@ -112,7 +112,7 @@ bool softStart_set_freq_ramp(void){
 }
 bool softStart_tun_power(void){
 	pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);    // ولتاژ باس
-	pwmState.current = ADC_to_current(adc_current_buffer); 							// جریان
+	pwmState.current = 0;//ADC_to_current(); 							// جریان
 	pwmState.currentPower = pwmState.voltage * pwmState.current;        // توان لحظه‌ای
 	if(pwmState.currentPower > PWM_SOFT_START_LOWER_LIMIT_POWER && pwmState.currentPower < PWM_SOFT_START_UPPER_LIMIT_POWER){
 		return true;

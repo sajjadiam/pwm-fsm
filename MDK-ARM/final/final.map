@@ -1246,15 +1246,15 @@ Section Cross References
     adc_utils.o(.ARM.exidx.text.ADC_inject_set_trigger) refers to adc_utils.o(.text.ADC_inject_set_trigger) for [Anonymous Symbol]
     adc_utils.o(.ARM.exidx.text.measure_adc_zero) refers to adc_utils.o(.text.measure_adc_zero) for [Anonymous Symbol]
     adc_utils.o(.text.ADC_currentChannelCalibrate) refers to adc_utils.o(.bss.calibrateMode) for calibrateMode
-    adc_utils.o(.text.ADC_currentChannelCalibrate) refers to adc_utils.o(.data.calbrateurrentOffset_machine) for calbrateurrentOffset_machine
+    adc_utils.o(.text.ADC_currentChannelCalibrate) refers to adc_utils.o(.data.calibrateCurrentOffset_machine) for calibrateCurrentOffset_machine
     adc_utils.o(.ARM.exidx.text.ADC_currentChannelCalibrate) refers to adc_utils.o(.text.ADC_currentChannelCalibrate) for [Anonymous Symbol]
-    adc_utils.o(.data.calbrateurrentOffset_machine) refers to adc_utils.o(.text.ADC_GetTrig) for ADC_GetTrig
-    adc_utils.o(.data.calbrateurrentOffset_machine) refers to adc_utils.o(.text.ADC_SetTrig) for ADC_SetTrig
-    adc_utils.o(.data.calbrateurrentOffset_machine) refers to adc_utils.o(.text.ADC_Start) for ADC_Start
-    adc_utils.o(.data.calbrateurrentOffset_machine) refers to adc_utils.o(.text.ADC_Sampling) for ADC_Sampling
-    adc_utils.o(.data.calbrateurrentOffset_machine) refers to adc_utils.o(.text.ADC_Processing) for ADC_Processing
-    adc_utils.o(.data.calbrateurrentOffset_machine) refers to adc_utils.o(.text.ADC_ResetTrig) for ADC_ResetTrig
-    adc_utils.o(.data.calbrateurrentOffset_machine) refers to adc_utils.o(.text.ADC_Finishing) for ADC_Finishing
+    adc_utils.o(.data.calibrateCurrentOffset_machine) refers to adc_utils.o(.text.ADC_GetTrig) for ADC_GetTrig
+    adc_utils.o(.data.calibrateCurrentOffset_machine) refers to adc_utils.o(.text.ADC_SetTrig) for ADC_SetTrig
+    adc_utils.o(.data.calibrateCurrentOffset_machine) refers to adc_utils.o(.text.ADC_Start) for ADC_Start
+    adc_utils.o(.data.calibrateCurrentOffset_machine) refers to adc_utils.o(.text.ADC_Sampling) for ADC_Sampling
+    adc_utils.o(.data.calibrateCurrentOffset_machine) refers to adc_utils.o(.text.ADC_Processing) for ADC_Processing
+    adc_utils.o(.data.calibrateCurrentOffset_machine) refers to adc_utils.o(.text.ADC_ResetTrig) for ADC_ResetTrig
+    adc_utils.o(.data.calibrateCurrentOffset_machine) refers to adc_utils.o(.text.ADC_Finishing) for ADC_Finishing
     mechanical_part.o(.text.Mechnical_Part_Init) refers to stm32f1xx_hal_gpio.o(.text.HAL_GPIO_WritePin) for HAL_GPIO_WritePin
     mechanical_part.o(.ARM.exidx.text.Mechnical_Part_Init) refers to mechanical_part.o(.text.Mechnical_Part_Init) for [Anonymous Symbol]
     mechanical_part.o(.text.Mechnical_Part_Handler) refers to stm32f1xx_hal_gpio.o(.text.HAL_GPIO_WritePin) for HAL_GPIO_WritePin
@@ -3280,7 +3280,7 @@ Image Symbol Table
     Region$$Table$$Limit                     0x08005a94   Number         0  anon$$obj.o(Region$$Table)
     SystemCoreClock                          0x20000000   Data           4  system_stm32f1xx.o(.data.SystemCoreClock)
     buffer                                   0x20000004   Data           6  main.o(.data.buffer)
-    calbrateurrentOffset_machine             0x2000000c   Data          28  adc_utils.o(.data.calbrateurrentOffset_machine)
+    calibrateCurrentOffset_machine           0x2000000c   Data          28  adc_utils.o(.data.calibrateCurrentOffset_machine)
     mechParts                                0x20000028   Data          24  mechanical_part.o(.data.mechParts)
     uwTickFreq                               0x20000040   Data           1  stm32f1xx_hal.o(.data.uwTickFreq)
     uwTickPrio                               0x20000044   Data           4  stm32f1xx_hal.o(.data.uwTickPrio)
@@ -3724,7 +3724,7 @@ Memory Map of the image
     0x20000000   0x08005a98   0x00000004   Data   RW          930    .data.SystemCoreClock  system_stm32f1xx.o
     0x20000004   0x08005a9c   0x00000006   Data   RW           21    .data.buffer        main.o
     0x2000000a   0x08005aa2   0x00000002   PAD
-    0x2000000c   0x08005aa4   0x0000001c   Data   RW         1206    .data.calbrateurrentOffset_machine  adc_utils.o
+    0x2000000c   0x08005aa4   0x0000001c   Data   RW         1206    .data.calibrateCurrentOffset_machine  adc_utils.o
     0x20000028   0x08005ac0   0x00000018   Data   RW         1220    .data.mechParts     mechanical_part.o
     0x20000040   0x08005ad8   0x00000001   Data   RW          324    .data.uwTickFreq    stm32f1xx_hal.o
     0x20000041   0x08005ad9   0x00000003   PAD
@@ -3777,7 +3777,7 @@ Image component sizes
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
        454          0          0          0        116       5915   adc.o
-      1032          0          0         28         59       7653   adc_utils.o
+      1032          0          0         28         59       7655   adc_utils.o
         52          0          0          0          0       2168   dma.o
        244          0          0          0          0       1621   gpio.o
         40          0          0          0          0       1419   key.o
@@ -3804,7 +3804,7 @@ Image component sizes
        842          0          0          0        144       8251   tim.o
 
     ----------------------------------------------------------------------
-     16398         78        928         72       2112     209266   Object Totals
+     16398         78        928         72       2112     209268   Object Totals
          0          0         32          0          0          0   (incl. Generated)
        190          0          2          5          4          0   (incl. Padding)
 
@@ -3896,8 +3896,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     22196        514        992         72       2208     211038   Grand Totals
-     22196        514        992         72       2208     211038   ELF Image Totals
+     22196        514        992         72       2208     211040   Grand Totals
+     22196        514        992         72       2208     211040   ELF Image Totals
      22196        514        992         72          0          0   ROM Totals
 
 ==============================================================================

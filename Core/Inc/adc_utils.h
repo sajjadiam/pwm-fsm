@@ -57,7 +57,7 @@ extern uint32_t InjectTrigger;
 extern uint16_t currentSample[SAMPLE_NUM];
 extern uint16_t currentSampleCounter;
 extern uint32_t currentOffset;
-extern adc_funk calbrateurrentOffset_machine[ADC_Current_Calibrate_Mode_End];
+extern adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End];
 extern ADC_Current_Calibrate_Mode calibrateMode;
 
 bool manual_ADC_Enable(void);

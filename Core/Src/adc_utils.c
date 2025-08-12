@@ -11,7 +11,7 @@ uint16_t currentSample[SAMPLE_NUM] = {0};				//adc sample buffer
 uint16_t currentSampleCounter = 0;							//counter of sample number
 uint32_t currentOffset = 0; 										//ADC no-load value or ADC offset
 ADC_Current_Calibrate_Mode calibrateMode = ADC_Current_Calibrate_Mode_GetTrig; //clibrate mode handler
-adc_funk calbrateurrentOffset_machine[ADC_Current_Calibrate_Mode_End] = {
+adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End] = {
 	ADC_GetTrig			,
 	ADC_SetTrig			,
 	ADC_Start				,
@@ -111,7 +111,7 @@ float ADC_to_current(uint16_t adc){
 	}
 	return 0;
 }
-//----------------------------
+//start current calibrate offset
 uint32_t get_ADC_inject_trigger(ADC_HandleTypeDef* hadc){
 	return hadc->Instance->CR2 & ADC_CR2_JEXTSEL;
 }
@@ -130,7 +130,7 @@ uint16_t measure_adc_zero(void){
 	return 0;
 }
 HAL_StatusTypeDef ADC_currentChannelCalibrate(void){
-	calbrateurrentOffset_machine[calibrateMode]();
+	calibrateCurrentOffset_machine[calibrateMode]();
 	if(calibrateMode == ADC_Current_Calibrate_Mode_Finishing){
 		return HAL_OK;
 	}
@@ -194,3 +194,5 @@ void ADC_ResetTrig	(void){
 void ADC_Finishing	(void){
 	//do noting
 }
+//end current calibrate offset
+//end of adc_utils.c

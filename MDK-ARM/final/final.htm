@@ -3,7 +3,7 @@
 <title>Static Call Graph - [final\final.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image final\final.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6210000: Last Updated: Tue Aug 12 15:38:58 2025
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6210000: Last Updated: Tue Aug 12 16:38:56 2025
 <BR><P>
 <H3>Maximum Stack Usage =        276 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -33,13 +33,13 @@ Function Pointers
  <LI><a href="#[37]">ADC_DMAConvCplt</a> from stm32f1xx_hal_adc.o(.text.ADC_DMAConvCplt) referenced 2 times from stm32f1xx_hal_adc.o(.text.HAL_ADC_Start_DMA)
  <LI><a href="#[39]">ADC_DMAError</a> from stm32f1xx_hal_adc.o(.text.ADC_DMAError) referenced 2 times from stm32f1xx_hal_adc.o(.text.HAL_ADC_Start_DMA)
  <LI><a href="#[38]">ADC_DMAHalfConvCplt</a> from stm32f1xx_hal_adc.o(.text.ADC_DMAHalfConvCplt) referenced 2 times from stm32f1xx_hal_adc.o(.text.HAL_ADC_Start_DMA)
- <LI><a href="#[5d]">ADC_Finishing</a> from adc_utils.o(.text.ADC_Finishing) referenced from adc_utils.o(.data.calbrateurrentOffset_machine)
- <LI><a href="#[57]">ADC_GetTrig</a> from adc_utils.o(.text.ADC_GetTrig) referenced from adc_utils.o(.data.calbrateurrentOffset_machine)
- <LI><a href="#[5b]">ADC_Processing</a> from adc_utils.o(.text.ADC_Processing) referenced from adc_utils.o(.data.calbrateurrentOffset_machine)
- <LI><a href="#[5c]">ADC_ResetTrig</a> from adc_utils.o(.text.ADC_ResetTrig) referenced from adc_utils.o(.data.calbrateurrentOffset_machine)
- <LI><a href="#[5a]">ADC_Sampling</a> from adc_utils.o(.text.ADC_Sampling) referenced from adc_utils.o(.data.calbrateurrentOffset_machine)
- <LI><a href="#[58]">ADC_SetTrig</a> from adc_utils.o(.text.ADC_SetTrig) referenced from adc_utils.o(.data.calbrateurrentOffset_machine)
- <LI><a href="#[59]">ADC_Start</a> from adc_utils.o(.text.ADC_Start) referenced from adc_utils.o(.data.calbrateurrentOffset_machine)
+ <LI><a href="#[5d]">ADC_Finishing</a> from adc_utils.o(.text.ADC_Finishing) referenced from adc_utils.o(.data.calibrateCurrentOffset_machine)
+ <LI><a href="#[57]">ADC_GetTrig</a> from adc_utils.o(.text.ADC_GetTrig) referenced from adc_utils.o(.data.calibrateCurrentOffset_machine)
+ <LI><a href="#[5b]">ADC_Processing</a> from adc_utils.o(.text.ADC_Processing) referenced from adc_utils.o(.data.calibrateCurrentOffset_machine)
+ <LI><a href="#[5c]">ADC_ResetTrig</a> from adc_utils.o(.text.ADC_ResetTrig) referenced from adc_utils.o(.data.calibrateCurrentOffset_machine)
+ <LI><a href="#[5a]">ADC_Sampling</a> from adc_utils.o(.text.ADC_Sampling) referenced from adc_utils.o(.data.calibrateCurrentOffset_machine)
+ <LI><a href="#[58]">ADC_SetTrig</a> from adc_utils.o(.text.ADC_SetTrig) referenced from adc_utils.o(.data.calibrateCurrentOffset_machine)
+ <LI><a href="#[59]">ADC_Start</a> from adc_utils.o(.text.ADC_Start) referenced from adc_utils.o(.data.calibrateCurrentOffset_machine)
  <LI><a href="#[4a]">Action_EnterInit</a> from pwm_fsm.o(.text.Action_EnterInit) referenced from pwm_fsm.o(.rodata.transitions)
  <LI><a href="#[50]">Action_EnterRunning</a> from pwm_fsm.o(.text.Action_EnterRunning) referenced from pwm_fsm.o(.rodata.transitions)
  <LI><a href="#[4b]">Action_EnterSoftStart</a> from pwm_fsm.o(.text.Action_EnterSoftStart) referenced from pwm_fsm.o(.rodata.transitions)
@@ -587,13 +587,13 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[5d]"></a>ADC_Finishing</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, adc_utils.o(.text.ADC_Finishing))
-<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calbrateurrentOffset_machine)
+<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calibrateCurrentOffset_machine)
 </UL>
 <P><STRONG><a name="[57]"></a>ADC_GetTrig</STRONG> (Thumb, 40 bytes, Stack size 0 bytes, adc_utils.o(.text.ADC_GetTrig))
-<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calbrateurrentOffset_machine)
+<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calibrateCurrentOffset_machine)
 </UL>
 <P><STRONG><a name="[5b]"></a>ADC_Processing</STRONG> (Thumb, 66 bytes, Stack size 0 bytes, adc_utils.o(.text.ADC_Processing))
-<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calbrateurrentOffset_machine)
+<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calibrateCurrentOffset_machine)
 </UL>
 <P><STRONG><a name="[5c]"></a>ADC_ResetTrig</STRONG> (Thumb, 76 bytes, Stack size 16 bytes, adc_utils.o(.text.ADC_ResetTrig))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = ADC_ResetTrig &rArr; HAL_ADCEx_InjectedStop_IT &rArr; ADC_ConversionStop_Disable
@@ -602,7 +602,7 @@ Global Symbols
 <LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_Stop_DMA
 <LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_Stop
 </UL>
-<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calbrateurrentOffset_machine)
+<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calibrateCurrentOffset_machine)
 </UL>
 <P><STRONG><a name="[5a]"></a>ADC_Sampling</STRONG> (Thumb, 106 bytes, Stack size 8 bytes, adc_utils.o(.text.ADC_Sampling))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = ADC_Sampling &rArr; HAL_ADCEx_InjectedStop_IT &rArr; ADC_ConversionStop_Disable
@@ -610,7 +610,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADCEx_InjectedGetValue
 <LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADCEx_InjectedStop_IT
 </UL>
-<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calbrateurrentOffset_machine)
+<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calibrateCurrentOffset_machine)
 </UL>
 <P><STRONG><a name="[58]"></a>ADC_SetTrig</STRONG> (Thumb, 66 bytes, Stack size 8 bytes, adc_utils.o(.text.ADC_SetTrig))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = ADC_SetTrig &rArr; HAL_ADCEx_InjectedStop_IT &rArr; ADC_ConversionStop_Disable
@@ -619,14 +619,14 @@ Global Symbols
 <LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_Stop_DMA
 <LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_Stop
 </UL>
-<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calbrateurrentOffset_machine)
+<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calibrateCurrentOffset_machine)
 </UL>
 <P><STRONG><a name="[59]"></a>ADC_Start</STRONG> (Thumb, 34 bytes, Stack size 8 bytes, adc_utils.o(.text.ADC_Start))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = ADC_Start &rArr; HAL_ADCEx_InjectedStart_IT &rArr; ADC_Enable
 </UL>
 <BR>[Calls]<UL><LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADCEx_InjectedStart_IT
 </UL>
-<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calbrateurrentOffset_machine)
+<BR>[Address Reference Count : 1]<UL><LI> adc_utils.o(.data.calibrateCurrentOffset_machine)
 </UL>
 <P><STRONG><a name="[f4]"></a>ADC_currentChannelCalibrate</STRONG> (Thumb, 36 bytes, Stack size 8 bytes, adc_utils.o(.text.ADC_currentChannelCalibrate))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = ADC_currentChannelCalibrate

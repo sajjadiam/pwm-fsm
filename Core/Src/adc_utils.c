@@ -1,4 +1,5 @@
 #include "adc_utils.h"
+#include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_adc.h"
 #include <math.h>
 
@@ -9,16 +10,18 @@ uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
 uint32_t InjectTrigger = 0;											//Inject mode Trigger buffer
 uint16_t currentSample[SAMPLE_NUM] = {0};				//adc sample buffer
 uint16_t currentSampleCounter = 0;							//counter of sample number
-uint32_t currentOffset = 0; 										//ADC no-load value or ADC offset
+uint16_t currentOffset = 0; 										//ADC no-load value or ADC offset
 ADC_Current_Calibrate_Mode calibrateMode = ADC_Current_Calibrate_Mode_GetTrig; //clibrate mode handler
 adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End] = {
-	ADC_GetTrig			,
-	ADC_SetTrig			,
-	ADC_Start				,
-	ADC_Sampling		,
-	ADC_Processing	,
-	ADC_ResetTrig		,
-	ADC_Finishing		,
+	[ADC_Current_Calibrate_Mode_GetTrig]					=	ADC_GetTrig			,
+	[ADC_Current_Calibrate_Mode_SetTrig]					=	ADC_SetTrig			,
+	[ADC_Current_Calibrate_Mode_Start]						=	ADC_Start				,
+	[ADC_Current_Calibrate_Mode_Sampling] 				= ADC_Sampling		,
+	[ADC_Current_Calibrate_Mode_Processing] 			= ADC_Processing	,
+	[ADC_Current_Calibrate_Mode_Measuringccuracy] = ADC_Measuringccuracy	,
+	[ADC_Current_Calibrate_Mode_ResetTrig]				= ADC_ResetTrig		,
+	[ADC_Current_Calibrate_Mode_Finishing]				= ADC_Finishing		,
+	[ADC_Current_Calibrate_Mode_SetAWD]						= ADC_SetAWD			,
 };
 // ISR callback
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
@@ -35,7 +38,10 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc){
 
 /* واچ‌داگ: اگر مقدار از بازه‌ی تعیین‌شده خارج شد */
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc){
-	if(hadc->Instance == ADC1) {
+	if(hadc->Instance != ADC1){
+		return;
+	}
+	if(hadc->Instance == ADC1){
 		/* اقدام حفاظت: مثلاً خاموش کردن PWM یا اعلام خطا */
 	}
 }
@@ -104,9 +110,9 @@ bool Temperture_Safety_Checker(void){
 float ADC_to_current(uint16_t adc){
 	if(adc != 0){
 		float value = ((float)adc / ADC_MAX) * V_REF;
-//		value -= CURRENT_OFFSET;
-		double Vsh = value / OPAMP_GAIN;
-		float current = Vsh * SHUNT_RESISTOR_VALUE;
+		value -= currentOffset;
+		double Vsh = value / G_TOTAL;
+		float current = Vsh / R_SHUNT;
 		return current;
 	}
 	return 0;
@@ -124,10 +130,6 @@ HAL_StatusTypeDef ADC_inject_set_trigger(ADC_HandleTypeDef* hadc, uint32_t injec
 		return HAL_OK;
 	}
 	return HAL_ERROR;
-}
-uint16_t measure_adc_zero(void){
-	
-	return 0;
 }
 HAL_StatusTypeDef ADC_currentChannelCalibrate(void){
 	calibrateCurrentOffset_machine[calibrateMode]();
@@ -179,13 +181,54 @@ void ADC_Processing	(void){
 	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
 		sampleSum += currentSample[i];
 	}
-	currentOffset = sampleSum / SAMPLE_NUM;
-	calibrateMode = ADC_Current_Calibrate_Mode_ResetTrig;
+	currentOffset = sampleSum / SAMPLE_NUM + 0.5f;
+	calibrateMode = ADC_Current_Calibrate_Mode_Measuringccuracy;
 	return;
+}
+void ADC_Measuringccuracy	(void){
+	uint16_t deviation = 0;
+	uint16_t deviationSum = 0;
+	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+		deviation = currentSample[i] - currentOffset;
+		deviationSum += (deviation * deviation);
+	}
+	double variance = deviationSum / (SAMPLE_NUM - 1);
+	double standardDeviation = sqrt(variance);
+	if(standardDeviation <= NOISE_THRESHOLD_LSB){
+		calibrateMode = ADC_Current_Calibrate_Mode_ResetTrig;
+		return;
+	}
+	else{
+		calibrateMode = ADC_Current_Calibrate_Mode_Start;
+		return;
+	}
 }
 void ADC_ResetTrig	(void){
 	if(ADC_inject_set_trigger(ADC_CURRENT_UNIT ,InjectTrigger) != HAL_OK){
 		//set error code
+		return;
+	}
+	calibrateMode = ADC_Current_Calibrate_Mode_SetAWD;
+	return;
+}
+void ADC_SetAWD			(void){
+	uint16_t awdHigh = CurrentA_to_ADCcounts(MAX_CURRENT) + currentOffset + (4 * NOISE_THRESHOLD_LSB);
+	if(awdHigh <= 0){
+		//error : calibrateMode faild -> check MAX_CURRENT and other values
+		//calibrateMode = 
+		return;
+	}
+  else if(awdHigh > 4095){
+		//error : calibrateMode faild -> Reduce the gain. out of range.
+		//PWM_FSM_HandleEvent(Evt_HardwareFault);
+		return;
+	}
+	if((*ADC_CURRENT_UNIT).Lock != HAL_LOCKED){
+		(ADC_CURRENT_UNIT)->Lock = HAL_LOCKED;
+		(ADC_CURRENT_UNIT)->Instance->HTR = (uint32_t)awdHigh;
+		__HAL_UNLOCK(ADC_CURRENT_UNIT);
+	}
+	else{
 		return;
 	}
 	calibrateMode = ADC_Current_Calibrate_Mode_Finishing;

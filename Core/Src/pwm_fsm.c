@@ -223,22 +223,28 @@ void stateStandby(void){
 	
 }
 void stateInit(void){
+	// get dma sample
 	if(!adc_dma_done){
 		return; // هنوز داده ADC نرسیده
   }
+	//check voltage safety
 	if(!DC_Voltage_Safety_Checker()){
 		
 		// مقادیر unsafe هستن، خطا بده
 		// PWM_FSM_HandleEvent(Evt_OverTempDetected) یا مشابه
 		return;
 	}
+	//check temperture safety
 	if(!Temperture_Safety_Checker()){
 		
 	}
+	//calibrate current for safe and accurate current value
 	if(ADC_currentChannelCalibrate() != HAL_OK){
 		return;
 	}
+	//disable adc
 	manual_ADC_Disable();
+	// go to next
 	EnqueueEvent(Evt_InitComplete);
 }
 void stateSoftStart(void){

@@ -56,7 +56,7 @@ typedef enum{
 	Evt_HardwareFault,
 	Evt_ArcDetected,
 	Evt_GridFaultDetected,
-
+	
 	// ---- سیستم ----
 	Evt_FaultCleared,
 	Evt_End

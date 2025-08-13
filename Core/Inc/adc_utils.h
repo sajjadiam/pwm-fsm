@@ -21,21 +21,32 @@
 #define ADC_MAX 	4095.0f  				// ??? ADC 12 ???? ????
 #define V_REF 		3.3f       			// ????? ???? ADC
 
-#define OPAMP_GAIN						19.5f
-#define ISO_GAIN							8
-#define TOT_GAIN							(OPAMP_GAIN * ISO_GAIN)
 
-#define SHUNT_RESISTOR_VALUE	0.001
-#define MAX_CURRENT						12.0f
 
-#define V_PER_A        		0.040f          // 40 mV/A (GAIN TLV=10, AMC single=×4)
-#define COUNTS_PER_V   		(ADC_MAX/V_REF)
-#define COUNTS_PER_A   		(V_PER_A * COUNTS_PER_V)
-#define SAMPLE_NUM				20
-#define ADC_CURRENT_UNIT	&hadc1
-//uint16_t zero_code = measure_adc_zero(); // ??????? ??? ????? ?? ???????
-//float    I_limit_A  = 12.0f;
+#define R_SHUNT													0.001f
+#define MAX_CURRENT											12.0f
+#define G_AMP          									20.0f
+#define G_ISO          									8.0f
+#define G_TOTAL          								(G_AMP * G_ISO)
 
+//#define V_ADC_TERM_CURRENT(float)				(R_SHUNT * float * G_AMP * G_ISO)
+//#define ADC_COUNTS_TERM_V(float)				(uint16_t)(V_ADC_TERM_CURRENT(float) * ADC_MAX / V_REF + 0.5f)
+//#define ADC_HIGH_AWD(uint16_t	,	float)	(ADC_COUNTS_TERM_V(float) + uint16_t)
+
+static inline uint16_t CurrentA_to_ADCcounts(float I_amp) {
+	if(V_REF == 0){
+		return 0;
+	}
+	return (I_amp * R_SHUNT * G_TOTAL) * (ADC_MAX / V_REF);
+}
+
+static inline float ADCcounts_to_CurrentA(float counts) {
+	return (counts * V_REF) / (ADC_MAX * R_SHUNT * G_TOTAL);
+}
+
+#define SAMPLE_NUM						20
+#define ADC_CURRENT_UNIT			&hadc1
+#define NOISE_THRESHOLD_LSB   3U
 //uint16_t awd_high = zero_code + (uint16_t)(COUNTS_PER_A * I_limit_A + 0.5f);
 //----------------------------------
 typedef void (*adc_funk)(void);
@@ -45,8 +56,10 @@ typedef enum {
 	ADC_Current_Calibrate_Mode_Start,
 	ADC_Current_Calibrate_Mode_Sampling,
 	ADC_Current_Calibrate_Mode_Processing,
+	ADC_Current_Calibrate_Mode_Measuringccuracy,
 	ADC_Current_Calibrate_Mode_ResetTrig,
 	ADC_Current_Calibrate_Mode_Finishing,
+	ADC_Current_Calibrate_Mode_SetAWD,
 	ADC_Current_Calibrate_Mode_End,
 }ADC_Current_Calibrate_Mode;
 //----------------------------------
@@ -56,7 +69,7 @@ extern volatile bool adc_inject_done;
 extern uint32_t InjectTrigger;
 extern uint16_t currentSample[SAMPLE_NUM];
 extern uint16_t currentSampleCounter;
-extern uint32_t currentOffset;
+extern uint16_t currentOffset;
 extern adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End];
 extern ADC_Current_Calibrate_Mode calibrateMode;
 
@@ -70,15 +83,16 @@ float ADC_to_current(uint16_t adc);
 
 uint32_t ADC_inject_trigger(ADC_HandleTypeDef* hadc);
 HAL_StatusTypeDef ADC_inject_set_trigger(ADC_HandleTypeDef* hadc, uint32_t injectTrigger);
-uint16_t measure_adc_zero(void);
 HAL_StatusTypeDef ADC_currentChannelCalibrate(void);
-void ADC_GetTrig		(void);
-void ADC_SetTrig		(void);
-void ADC_Start			(void);
-void ADC_Sampling		(void);
-void ADC_Processing	(void);
-void ADC_ResetTrig	(void);
-void ADC_Finishing	(void);
+void ADC_GetTrig					(void);
+void ADC_SetTrig					(void);
+void ADC_Start						(void);
+void ADC_Sampling					(void);
+void ADC_Processing				(void);
+void ADC_Measuringccuracy	(void);
+void ADC_ResetTrig				(void);
+void ADC_SetAWD						(void);
+void ADC_Finishing				(void);
 
 
 

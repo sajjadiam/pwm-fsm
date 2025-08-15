@@ -3,12 +3,20 @@
 #include "tim.h"
 #include "key.h"
 #include "mechanical_part.h"
-
+#include "adc.h"
 volatile bool stateMachineFlag = false;
+volatile Init_MODE initMode = Init_MODE_DMA_Sampling;
 EventQueue_t eventQueue;	
 KeyPinConfig keys[END_KEY];
 ERROR_CODE errorCode = ERROR_CODE_None;
-
+const adc_funk initMachine[Init_MODE_END] = {
+	[Init_MODE_DMA_Sampling]				=	DMA_Sampling,
+	[Init_MODE_DMA_Processing]			= DMA_Processing,
+	[Init_MODE_safatyCheck]					= safatyCheck,
+	[Init_MODE_calibratingCurrent]	= calibratingCurrent,
+	[Init_MODE_adcDisable]					= adcDisable,
+	[Init_MODE_initFinishing]				= initFinishing,
+};
 const StateTransition_t transitions[TRANSITION_NUM] ={
 	// ====== STANDBY ======
 	{PwmStateStandby, 				Evt_StartCommand,      			Action_EnterInit,         PwmStateInit						},	// 1
@@ -210,6 +218,7 @@ bool Action_Shutdown(void){
 	return true;
 }
 bool Action_EnterStandby(void){
+	
 	return true;
 }
 bool Action_SoftRestart(void){
@@ -223,29 +232,9 @@ void stateStandby(void){
 	
 }
 void stateInit(void){
-	// get dma sample
-	if(!adc_dma_done){
-		return; // هنوز داده ADC نرسیده
-  }
-	//check voltage safety
-	if(!DC_Voltage_Safety_Checker()){
-		
-		// مقادیر unsafe هستن، خطا بده
-		// PWM_FSM_HandleEvent(Evt_OverTempDetected) یا مشابه
-		return;
-	}
-	//check temperture safety
-	if(!Temperture_Safety_Checker()){
-		
-	}
-	//calibrate current for safe and accurate current value
-	if(ADC_currentChannelCalibrate() != HAL_OK){
-		return;
-	}
-	//disable adc
-	manual_ADC_Disable();
-	// go to next
+	initMachine[initMode]();
 	EnqueueEvent(Evt_InitComplete);
+	return;
 }
 void stateSoftStart(void){
 	if(!pwmState.flags.freqRampDone){
@@ -349,3 +338,83 @@ void stateSoftStop_keyCallback(void){
 void stateHardStop_keyCallback(void){
 	//do nothing
 }
+//init state machine function
+void DMA_Sampling				(void){
+	if(adc_dma_done && dmaSampleCounter < SAMPLE_NUM){
+		adc_dma_done = false;
+		voltageSample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_VBUS];
+		temp1Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH1];
+		temp2Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH2];
+		dmaSampleCounter++;
+		return;
+	}
+	else if(dmaSampleCounter >= SAMPLE_NUM){
+		if(HAL_ADC_Stop_DMA(ADC_UNIT) != HAL_OK){
+			return;
+		}
+		dmaSampleCounter = 0;
+		initMode = Init_MODE_DMA_Processing;
+		return;
+	}
+	return;
+}
+void DMA_Processing			(void){
+	uint32_t sampleSum = 0;
+	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+		sampleSum += voltageSample[i];
+	}
+	dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
+	sampleSum = 0;
+	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+		sampleSum += temp1Sample[i];
+	}
+	dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
+	sampleSum = 0;
+	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+		sampleSum += temp2Sample[i];
+	}
+	dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
+	initMode = Init_MODE_safatyCheck;
+	return;
+}
+void safatyCheck				(void){
+	if(!DC_Voltage_Safety_Checker()){
+		//error
+		return;
+	}
+	if(!Temperture_Safety_Checker()){
+		//error
+		return;
+	}
+	initMode = Init_MODE_calibratingCurrent;
+	return;
+}
+void calibratingCurrent	(void){
+	if(!ADC_currentChannelCalibrate()){
+		//error
+		return;
+	}
+	initMode = Init_MODE_adcDisable;
+	return;
+}
+void adcDisable					(void){
+	manual_ADC_Disable();
+	initMode = Init_MODE_initFinishing;
+	return;
+}
+void initFinishing			(void){
+	//do noting
+}
+//soft start state machine function
+
+//Resonance Sweep state machine function
+
+//Running state machine function
+
+//Recovery state machine function
+
+//Soft Stop state machine function
+
+//HardStop state machine function
+
+//end of pwm_fsm.c

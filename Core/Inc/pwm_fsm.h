@@ -2,7 +2,7 @@
 #define __PWM_FSM_H__
 
 #include <stdint.h>
-#include "adc_utils.h"
+#include <stdbool.h>
 
 #define EVENT_QUEUE_SIZE 	10
 #define TRANSITION_NUM		26
@@ -88,6 +88,20 @@ void PWM_FSM_Init(void);			//ok
 bool PWM_FSM_HandleEvent(PWM_Event_t event); //ok
 
 PWM_State_Machine PWM_FSM_GetCurrentState(void); //ok
+//-----------------------------------------------------
+typedef enum{
+	Init_MODE_DMA_Sampling			= 0,
+	Init_MODE_DMA_Processing,
+	Init_MODE_safatyCheck,
+	Init_MODE_calibratingCurrent,
+	Init_MODE_adcDisable,
+	Init_MODE_initFinishing,
+	Init_MODE_END,
+}Init_MODE;
+
+
+
+
 //----------------------------------------
 bool Action_None(void);                // هیچ کاری انجام نمی‌ده (برای ترنزیشن‌های منطقی بدون عملیات)
 bool Action_EnterInit(void);               // مقداردهی اولیه سخت‌افزار و پارامترها
@@ -130,4 +144,5 @@ void stateRunning_keyCallback(void);
 void stateRecovery_keyCallback(void);
 void stateSoftStop_keyCallback(void);
 void stateHardStop_keyCallback(void);
+
 #endif // __PWM_FSM_H__

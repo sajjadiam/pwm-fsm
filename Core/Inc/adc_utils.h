@@ -3,6 +3,7 @@
 
 
 #include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_adc.h"
 #include <stdbool.h>
 
 #define ADC_IDX_VBUS        	0
@@ -45,9 +46,8 @@ static inline float ADCcounts_to_CurrentA(float counts) {
 }
 
 #define SAMPLE_NUM						20
-#define ADC_CURRENT_UNIT			&hadc1
+#define ADC_UNIT							&hadc1
 #define NOISE_THRESHOLD_LSB   3U
-//uint16_t awd_high = zero_code + (uint16_t)(COUNTS_PER_A * I_limit_A + 0.5f);
 //----------------------------------
 typedef void (*adc_funk)(void);
 typedef enum {
@@ -64,11 +64,16 @@ typedef enum {
 }ADC_Current_Calibrate_Mode;
 //----------------------------------
 extern uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
+extern uint16_t voltageSample[SAMPLE_NUM];
+extern uint16_t temp1Sample[SAMPLE_NUM];
+extern uint16_t temp2Sample[SAMPLE_NUM];
+extern uint16_t dmaSampleMean[ADC_DMA_CHANNEL_COUNT];
 extern volatile bool adc_dma_done;
 extern volatile bool adc_inject_done;
 extern uint32_t InjectTrigger;
 extern uint16_t currentSample[SAMPLE_NUM];
 extern uint16_t currentSampleCounter;
+extern uint16_t dmaSampleCounter;
 extern uint16_t currentOffset;
 extern adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End];
 extern ADC_Current_Calibrate_Mode calibrateMode;
@@ -83,7 +88,7 @@ float ADC_to_current(uint16_t adc);
 
 uint32_t ADC_inject_trigger(ADC_HandleTypeDef* hadc);
 HAL_StatusTypeDef ADC_inject_set_trigger(ADC_HandleTypeDef* hadc, uint32_t injectTrigger);
-HAL_StatusTypeDef ADC_currentChannelCalibrate(void);
+bool ADC_currentChannelCalibrate(void);
 void ADC_GetTrig					(void);
 void ADC_SetTrig					(void);
 void ADC_Start						(void);
@@ -93,7 +98,11 @@ void ADC_Measuringccuracy	(void);
 void ADC_ResetTrig				(void);
 void ADC_SetAWD						(void);
 void ADC_Finishing				(void);
-
-
-
+//----------------------------
+void DMA_Sampling				(void);
+void DMA_Processing			(void);
+void safatyCheck				(void);
+void calibratingCurrent	(void);
+void adcDisable					(void);
+void initFinishing			(void);
 #endif // ADC_UTILS_H

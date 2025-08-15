@@ -1,16 +1,19 @@
 #include "adc_utils.h"
-#include "stm32f1xx_hal.h"
-#include "stm32f1xx_hal_adc.h"
 #include <math.h>
 
 extern ADC_HandleTypeDef hadc1;
 volatile bool adc_dma_done = 0;
 volatile bool adc_inject_done = 0;
 uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
+uint16_t dmaSampleMean[ADC_DMA_CHANNEL_COUNT];
 uint32_t InjectTrigger = 0;											//Inject mode Trigger buffer
 uint16_t currentSample[SAMPLE_NUM] = {0};				//adc sample buffer
+uint16_t voltageSample[SAMPLE_NUM] = {0};
+uint16_t temp1Sample[SAMPLE_NUM] = {0};
+uint16_t temp2Sample[SAMPLE_NUM] = {0};
 uint16_t currentSampleCounter = 0;							//counter of sample number
 uint16_t currentOffset = 0; 										//ADC no-load value or ADC offset
+uint16_t dmaSampleCounter = 0;
 ADC_Current_Calibrate_Mode calibrateMode = ADC_Current_Calibrate_Mode_GetTrig; //clibrate mode handler
 adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End] = {
 	[ADC_Current_Calibrate_Mode_GetTrig]					=	ADC_GetTrig			,
@@ -75,7 +78,7 @@ bool manual_ADC_Disable(void){
 	return true;
 }
 bool DC_Voltage_Safety_Checker(void){
-	float voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);
+	float voltage = ADC_to_voltage(dmaSampleMean[ADC_IDX_VBUS]);
 	if(voltage < 250 || voltage > 345){
 		return false;
 	}
@@ -100,8 +103,8 @@ float ADC_to_temperture(uint16_t adc){
 	return 0;
 }
 bool Temperture_Safety_Checker(void){
-	float temperture1 = ADC_to_temperture(adc_dma_buffer[ADC_IDX_TEMP_CH1]);
-	float temperture2 = ADC_to_temperture(adc_dma_buffer[ADC_IDX_TEMP_CH2]);
+	float temperture1 = ADC_to_temperture(dmaSampleMean[ADC_IDX_TEMP_CH1]);
+	float temperture2 = ADC_to_temperture(dmaSampleMean[ADC_IDX_TEMP_CH2]);
 	if(temperture1 > 75 || temperture2 > 75){
 		return false;
 	}
@@ -131,20 +134,20 @@ HAL_StatusTypeDef ADC_inject_set_trigger(ADC_HandleTypeDef* hadc, uint32_t injec
 	}
 	return HAL_ERROR;
 }
-HAL_StatusTypeDef ADC_currentChannelCalibrate(void){
+bool ADC_currentChannelCalibrate(void){
 	calibrateCurrentOffset_machine[calibrateMode]();
 	if(calibrateMode == ADC_Current_Calibrate_Mode_Finishing){
-		return HAL_OK;
+		return true;
 	}
-	return HAL_ERROR;
+	return false;
 }
 void ADC_GetTrig		(void){
-	InjectTrigger = get_ADC_inject_trigger(ADC_CURRENT_UNIT);
+	InjectTrigger = get_ADC_inject_trigger(ADC_UNIT);
 	calibrateMode = ADC_Current_Calibrate_Mode_SetTrig;
 	return;
 }
 void ADC_SetTrig		(void){
-	if(ADC_inject_set_trigger(ADC_CURRENT_UNIT ,ADC_INJECTED_SOFTWARE_START) != HAL_OK){
+	if(ADC_inject_set_trigger(ADC_UNIT ,ADC_INJECTED_SOFTWARE_START) != HAL_OK){
 		//set error code
 		return;
 	}
@@ -152,7 +155,7 @@ void ADC_SetTrig		(void){
 	return;
 }
 void ADC_Start			(void){
-	if(HAL_ADCEx_InjectedStart_IT(ADC_CURRENT_UNIT) != HAL_OK){
+	if(HAL_ADCEx_InjectedStart_IT(ADC_UNIT) != HAL_OK){
 		//set error code
 		return;
 	}
@@ -162,12 +165,12 @@ void ADC_Start			(void){
 void ADC_Sampling		(void){
 	if(adc_inject_done && currentSampleCounter < SAMPLE_NUM){
 		adc_inject_done = false;
-		currentSample[currentSampleCounter] = HAL_ADCEx_InjectedGetValue(ADC_CURRENT_UNIT, ADC_INJECTED_RANK_1);
+		currentSample[currentSampleCounter] = HAL_ADCEx_InjectedGetValue(ADC_UNIT, ADC_INJECTED_RANK_1);
 		currentSampleCounter++;
 		return;
 	}
 	else if(currentSampleCounter >= SAMPLE_NUM){
-		if(HAL_ADCEx_InjectedStop_IT(ADC_CURRENT_UNIT) != HAL_OK){
+		if(HAL_ADCEx_InjectedStop_IT(ADC_UNIT) != HAL_OK){
 			//set error code
 			return;
 		}
@@ -204,7 +207,7 @@ void ADC_Measuringccuracy	(void){
 	}
 }
 void ADC_ResetTrig	(void){
-	if(ADC_inject_set_trigger(ADC_CURRENT_UNIT ,InjectTrigger) != HAL_OK){
+	if(ADC_inject_set_trigger(ADC_UNIT ,InjectTrigger) != HAL_OK){
 		//set error code
 		return;
 	}
@@ -223,10 +226,10 @@ void ADC_SetAWD			(void){
 		//PWM_FSM_HandleEvent(Evt_HardwareFault);
 		return;
 	}
-	if((*ADC_CURRENT_UNIT).Lock != HAL_LOCKED){
-		(ADC_CURRENT_UNIT)->Lock = HAL_LOCKED;
-		(ADC_CURRENT_UNIT)->Instance->HTR = (uint32_t)awdHigh;
-		__HAL_UNLOCK(ADC_CURRENT_UNIT);
+	if((*ADC_UNIT).Lock != HAL_LOCKED){
+		(ADC_UNIT)->Lock = HAL_LOCKED;
+		(ADC_UNIT)->Instance->HTR = (uint32_t)awdHigh;
+		__HAL_UNLOCK(ADC_UNIT);
 	}
 	else{
 		return;
@@ -238,4 +241,7 @@ void ADC_Finishing	(void){
 	//do noting
 }
 //end current calibrate offset
+//----------------------------
+
+
 //end of adc_utils.c

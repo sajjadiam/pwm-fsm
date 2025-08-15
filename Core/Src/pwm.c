@@ -154,11 +154,6 @@ void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 	}
 }
 //--------------------------
-void pwm_softStop(PWM_State_t* pwmState){
-
-}
-
-
 volatile uint32_t CapturebuffCh3 [SAMPLE_NUM];
 volatile uint32_t CaptureCounterCh3 = 0;
 volatile uint32_t CapturebuffCh4 [SAMPLE_NUM];

@@ -45,7 +45,7 @@ static inline float ADCcounts_to_CurrentA(float counts) {
 	return (counts * V_REF) / (ADC_MAX * R_SHUNT * G_TOTAL);
 }
 
-#define SAMPLE_NUM						20
+#define SAMPLE_NUM_MAX				25 // 20 is orginal and +5 for over flow
 #define ADC_UNIT							&hadc1
 #define NOISE_THRESHOLD_LSB   3U
 //----------------------------------
@@ -64,20 +64,20 @@ typedef enum {
 }ADC_Current_Calibrate_Mode;
 //----------------------------------
 extern uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
-extern uint16_t voltageSample[SAMPLE_NUM];
-extern uint16_t temp1Sample[SAMPLE_NUM];
-extern uint16_t temp2Sample[SAMPLE_NUM];
+extern uint16_t voltageSample[SAMPLE_NUM_MAX];
+extern uint16_t temp1Sample[SAMPLE_NUM_MAX];
+extern uint16_t temp2Sample[SAMPLE_NUM_MAX];
 extern uint16_t dmaSampleMean[ADC_DMA_CHANNEL_COUNT];
 extern volatile bool adc_dma_done;
 extern volatile bool adc_inject_done;
 extern uint32_t InjectTrigger;
-extern uint16_t currentSample[SAMPLE_NUM];
+extern uint16_t currentSample[SAMPLE_NUM_MAX];
 extern uint16_t currentSampleCounter;
 extern uint16_t dmaSampleCounter;
 extern uint16_t currentOffset;
 extern adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End];
 extern ADC_Current_Calibrate_Mode calibrateMode;
-
+extern uint16_t currentSmpleMean;
 bool manual_ADC_Enable(void);
 bool manual_ADC_Disable(void);
 bool DC_Voltage_Safety_Checker(void);
@@ -105,4 +105,7 @@ void safatyCheck				(void);
 void calibratingCurrent	(void);
 void adcDisable					(void);
 void initFinishing			(void);
+//----------------------------------
+void DMA_GET_SAMPLE(void);
+void INJECT_GET_SAMPLE(void);
 #endif // ADC_UTILS_H

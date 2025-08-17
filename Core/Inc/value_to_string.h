@@ -18,6 +18,7 @@ typedef enum{
 }SEVEN_SEGMENT_MODE;
 typedef void (*SevenSegmentModeHandler)(char* str ,void* P);
 
+extern SEVEN_SEGMENT_MODE segmentMode;
 extern const SevenSegmentModeHandler sevenSegmentModeHandler[SEVEN_SEGMENT_MODE_END];
 
 void SevenSeg_TempertureConvertToString(char* str ,void* P);			// تبديل مقدار دما به رشته براي سون سگمنت 

@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define EVENT_QUEUE_SIZE 	10
-#define TRANSITION_NUM		26
-
+#define EVENT_QUEUE_SIZE 		10U
+#define TRANSITION_NUM			26U
+#define SAMPLE_NUM_RUNNING	5U
 typedef enum{
 	PwmStateStandby = 0,      	
 	PwmStateInit,             	
@@ -95,12 +95,22 @@ typedef enum{
 	Init_MODE_safatyCheck,
 	Init_MODE_calibratingCurrent,
 	Init_MODE_adcDisable,
-	Init_MODE_initFinishing,
+	Init_MODE_Finishing,
 	Init_MODE_END,
 }Init_MODE;
+extern volatile Init_MODE initMode;
+//-------------------------------------------
+typedef enum{
+	SOFT_START_MODE_setFrequencyRamp		= 0,
+	SOFT_START_MODE_sampling,
+	SOFT_START_MODE_processing,
+	SOFT_START_MODE_safatyCheck,
+	SOFT_START_MODE_tunPower,
+	SOFT_START_MODE_Finishing,
+	SOFT_START_MODE_END,
+}SOFT_START_MODE;
 
-
-
+extern volatile SOFT_START_MODE softStartMode;
 
 //----------------------------------------
 bool Action_None(void);                // هیچ کاری انجام نمی‌ده (برای ترنزیشن‌های منطقی بدون عملیات)
@@ -129,6 +139,7 @@ void stateHardStop(void);
 void reset_fsm_control_flags(void);
 extern const StateTransition_t pwmFsmTable[TRANSITION_NUM];
 extern const uint32_t stateTimingTable_us[PwmStateEND];
+extern const uint8_t SampleNum[PwmStateEND];
 //-----------------------------------------------------------
 bool EnqueueEvent(PWM_Event_t evt);
 bool DequeueEvent(PWM_Event_t* evt);

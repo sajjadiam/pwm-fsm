@@ -1,5 +1,7 @@
 #include "pwm.h"
 #include "tim.h"
+#include "adc.h"
+
 uint32_t fsm_tick_us = 0;
 static uint16_t softStart_arrCounter = 0;
 PWM_State_t pwmState;
@@ -81,11 +83,17 @@ bool set_PWM_control_variables(PWM_State_t* pwmState){
 	return true;
 }
 //-----------------------------------------
-bool softStart_set_freq_ramp(void){
+void softStart_set_freq_ramp(void){
 	uint32_t arr = HAL_PWM_GetARR();
 	if(arr <= PWM_END_ARR && pwmState.currentDeadTime <= PWM_END_DEAD_TIME){
-		return true;
+		if(!manual_ADC_Enable()){
+			//error code
+			return;
+		}
+		softStartMode = SOFT_START_MODE_sampling;
+		return;
 	}
+	//setting arr
 	arr -= PWM_SOFT_START_STEP; // step => 6 
 	if(arr < PWM_END_ARR){
 		arr = PWM_END_ARR;
@@ -96,26 +104,60 @@ bool softStart_set_freq_ramp(void){
 	HAL_PWM_SetARR(arr);
 	HAL_PWM_SetCompare(TIM_CHANNEL_1,cmp);
 	HAL_PWM_SetCompare(TIM_CHANNEL_2,cmp);
-	//---------------------
+	//setting dead time
 	if(softStart_arrCounter >= 56){
 		softStart_arrCounter -= 56;
 		if (pwmState.currentDeadTime > pwmState.targetDeadTime) {
 			pwmState.currentDeadTime--;
 		}
 	}
-	if(pwmState.currentDeadTime < pwmState.targetDeadTime){
-		pwmState.currentDeadTime = pwmState.targetDeadTime;
-	}
 	HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
 	softStart_arrCounter += PWM_SOFT_START_STEP;
-	return false;
+	return ;
 }
-bool softStart_tun_power(void){
-	pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);    // ولتاژ باس
-	pwmState.current = 0;//ADC_to_current(); 							// جریان
-	pwmState.currentPower = pwmState.voltage * pwmState.current;        // توان لحظه‌ای
+void softStart_sampling(void){
+	DMA_GET_SAMPLE();
+	INJECT_GET_SAMPLE();
+	if(currentSampleCounter >= SampleNum[pwmState.currentState] && dmaSampleCounter >= SampleNum[pwmState.currentState]){
+		if(!manual_ADC_Disable()){
+			return;
+		}
+		softStartMode = SOFT_START_MODE_processing;
+		return;
+	}
+}
+void softStart_Processing(void){
+	uint32_t sampleSum = 0;
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
+		sampleSum += voltageSample[i];
+	}
+	dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+	//--
+	sampleSum = 0;
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
+		sampleSum += temp1Sample[i];
+	}
+	dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+	//--
+	sampleSum = 0;
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
+		sampleSum += temp2Sample[i];
+	}
+	dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+	//--
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
+		sampleSum += currentSample[i];
+	}
+	currentSmpleMean = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+	softStartMode = SOFT_START_MODE_tunPower;
+	return;
+}
+void softStart_tun_power(void){
+	pwmState.voltage = ADC_to_voltage(dmaSampleMean[ADC_IDX_VBUS]);   // ولتاژ باس
+	pwmState.current =ADC_to_current(currentSmpleMean); 							// جریان
+	pwmState.currentPower = pwmState.voltage * pwmState.current;      // توان لحظه‌ای
 	if(pwmState.currentPower > PWM_SOFT_START_LOWER_LIMIT_POWER && pwmState.currentPower < PWM_SOFT_START_UPPER_LIMIT_POWER){
-		return true;
+		softStartMode = SOFT_START_MODE_Finishing;
 	}
 	else if(pwmState.currentPower < PWM_SOFT_START_LOWER_LIMIT_POWER){
 		pwmState.currentDeadTime--;
@@ -124,7 +166,13 @@ bool softStart_tun_power(void){
 		pwmState.currentDeadTime++;
 	}
 	HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
-	return false;
+	if(!manual_ADC_Enable()){
+		return;
+	}
+	softStartMode = SOFT_START_MODE_sampling;
+}
+void softStart_finishing(void){
+	//do nothing
 }
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 	uint32_t arr =  HAL_PWM_GetARR();
@@ -154,9 +202,9 @@ void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 	}
 }
 //--------------------------
-volatile uint32_t CapturebuffCh3 [SAMPLE_NUM];
+volatile uint32_t CapturebuffCh3 [SAMPLE_NUM_MAX];
 volatile uint32_t CaptureCounterCh3 = 0;
-volatile uint32_t CapturebuffCh4 [SAMPLE_NUM];
+volatile uint32_t CapturebuffCh4 [SAMPLE_NUM_MAX];
 volatile uint32_t CaptureCounterCh4 = 0;
 volatile bool captureReadyCh3 = false;
 volatile bool captureReadyCh4 = false;
@@ -165,7 +213,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3){
 			CapturebuffCh3[CaptureCounterCh3] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
 			CaptureCounterCh3++;
-			if(CaptureCounterCh3 >= SAMPLE_NUM){
+			if(CaptureCounterCh3 >= SampleNum[pwmState.currentState]){
 				captureReadyCh3 = true;
 				CaptureCounterCh3 = 0;
 			}
@@ -173,7 +221,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 		else if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4){
 			CapturebuffCh4[CaptureCounterCh4] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4);
 			CaptureCounterCh4++;
-			if(CaptureCounterCh4 >= SAMPLE_NUM){
+			if(CaptureCounterCh4 >= SampleNum[pwmState.currentState]){
 				captureReadyCh4 = true;
 				CaptureCounterCh4 = 0;
 			}
@@ -184,13 +232,16 @@ uint32_t captureDiffHandler(uint32_t* time){
 	uint32_t diffSum = 0;
 	uint32_t t_prev = CapturebuffCh3[0];
 	uint32_t period_sum = 0;
-	for(int i=1; i<SAMPLE_NUM; i++){
+	for(int i=1; i<SampleNum[pwmState.currentState]; i++){
     uint32_t t = CapturebuffCh3[i];
     uint32_t diff = (t >= t_prev) ? (t - t_prev)
                                   : ((htim1.Init.Period + 1) - t_prev + t);
     period_sum += diff;
     t_prev = t;
 }
-	float avgPeriod = (float)period_sum / (SAMPLE_NUM-1);
+	float avgPeriod = (float)period_sum / (SampleNum[pwmState.currentState]-1);
 	return diffSum;
 }
+//--------------------------
+
+//end of pwm.c

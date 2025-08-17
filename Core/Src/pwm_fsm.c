@@ -6,16 +6,25 @@
 #include "adc.h"
 volatile bool stateMachineFlag = false;
 volatile Init_MODE initMode = Init_MODE_DMA_Sampling;
+volatile SOFT_START_MODE softStartMode = SOFT_START_MODE_setFrequencyRamp;
 EventQueue_t eventQueue;	
 KeyPinConfig keys[END_KEY];
 ERROR_CODE errorCode = ERROR_CODE_None;
-const adc_funk initMachine[Init_MODE_END] = {
+const State_Machine_Func initMachine[Init_MODE_END] = {
 	[Init_MODE_DMA_Sampling]				=	DMA_Sampling,
 	[Init_MODE_DMA_Processing]			= DMA_Processing,
 	[Init_MODE_safatyCheck]					= safatyCheck,
 	[Init_MODE_calibratingCurrent]	= calibratingCurrent,
 	[Init_MODE_adcDisable]					= adcDisable,
-	[Init_MODE_initFinishing]				= initFinishing,
+	[Init_MODE_Finishing]						= initFinishing,
+};
+const State_Machine_Func softStartMachine[SOFT_START_MODE_END] = {
+	[SOFT_START_MODE_setFrequencyRamp]	= softStart_set_freq_ramp,
+	[SOFT_START_MODE_sampling]					= softStart_sampling,
+	[SOFT_START_MODE_processing]				= softStart_Processing,
+	[SOFT_START_MODE_safatyCheck]				= safatyCheck,
+	[SOFT_START_MODE_tunPower]					= softStart_tun_power,
+	[SOFT_START_MODE_Finishing]					= softStart_finishing,
 };
 const StateTransition_t transitions[TRANSITION_NUM] ={
 	// ====== STANDBY ======
@@ -64,7 +73,16 @@ const uint32_t stateTimingTable_us[PwmStateEND] = {
 	[PwmStateSoftStop]       	= 50000,		//
 	[PwmStateHardStop]				= 50000			//
 };
-
+const uint8_t SampleNum[PwmStateEND] = {
+	[PwmStateStandby]        	= 0,   	
+	[PwmStateInit]           	= 20,   
+	[PwmStateSoftStart]      	= 5,		
+	[PwmStateResonanceSweep]	= 5,		
+	[PwmStateRunning]        	= 5,
+	[PwmStateRecovery]        = 5,
+	[PwmStateSoftStop]       	= 0,
+	[PwmStateHardStop]				= 0	
+};
 
 PWM_State_Machine PWM_FSM_GetCurrentState(void){
 	return pwmState.currentState;
@@ -178,12 +196,6 @@ bool Action_EnterSoftStart(void){
 		//error code
 		return false;
 	}
-	
-	if(!manual_ADC_Enable()){
-		//error code
-		return false;
-	}
-	
 	if(!Enable_ProtectionInterrupts()){
 		//error code
 		return false;
@@ -194,9 +206,14 @@ bool Action_EnterSoftStart(void){
 	return true;
 }
 bool Action_StartSweep(void){
-	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3); //start input capture
-	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4); //start input capture
-	
+	if(!HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3)){ //start input capture
+		// error
+		return false;
+	}
+	if(!HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4)){ //start input capture
+		// error
+		return false;
+	}
 	return true;
 }  
 bool Action_EnterRunning(void){
@@ -237,15 +254,7 @@ void stateInit(void){
 	return;
 }
 void stateSoftStart(void){
-	if(!pwmState.flags.freqRampDone){
-		if(!softStart_set_freq_ramp()){
-			return;
-		}
-		pwmState.flags.freqRampDone = PWM_TRUE;
-	}
-	else if(!softStart_tun_power()){
-		return;
-	}
+	softStartMachine[softStartMode]();
 	EnqueueEvent(Evt_SoftStartDone);
 }
 void stateResonanceSweep(void){
@@ -340,15 +349,14 @@ void stateHardStop_keyCallback(void){
 }
 //init state machine function
 void DMA_Sampling				(void){
-	if(adc_dma_done && dmaSampleCounter < SAMPLE_NUM){
+	if(adc_dma_done){
 		adc_dma_done = false;
 		voltageSample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_VBUS];
 		temp1Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH1];
 		temp2Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH2];
-		dmaSampleCounter++;
 		return;
 	}
-	else if(dmaSampleCounter >= SAMPLE_NUM){
+	else if(dmaSampleCounter >= SampleNum[pwmState.currentState]){
 		if(HAL_ADC_Stop_DMA(ADC_UNIT) != HAL_OK){
 			return;
 		}
@@ -360,20 +368,20 @@ void DMA_Sampling				(void){
 }
 void DMA_Processing			(void){
 	uint32_t sampleSum = 0;
-	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
 		sampleSum += voltageSample[i];
 	}
-	dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
+	dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
 	sampleSum = 0;
-	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
 		sampleSum += temp1Sample[i];
 	}
-	dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
+	dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
 	sampleSum = 0;
-	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
 		sampleSum += temp2Sample[i];
 	}
-	dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
+	dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
 	initMode = Init_MODE_safatyCheck;
 	return;
 }
@@ -399,7 +407,7 @@ void calibratingCurrent	(void){
 }
 void adcDisable					(void){
 	manual_ADC_Disable();
-	initMode = Init_MODE_initFinishing;
+	initMode = Init_MODE_Finishing;
 	return;
 }
 void initFinishing			(void){

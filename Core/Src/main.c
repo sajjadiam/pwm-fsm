@@ -136,6 +136,7 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim2);
   while (1)
   {
+		
 		if(hardFaultFlag){
 			hardFaultFlag = false;
 			PWM_FSM_HandleEvent(Evt_HardwareFault);
@@ -153,16 +154,17 @@ int main(void)
 			adc_dma_done = false;
 			pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);
 			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_CHANNEL_COUNT);
-		} 
+		}
 		if(sevenSegUpdateFlag){
 			sevenSegUpdateFlag = 0;
-			//Sevenseg_VoltageConvertToString(buffer,&pwmState); بايد تابع متغيير بذارم
+			sevenSegmentModeHandler[segmentMode](buffer,&pwmState);
 			SevenSeg_BufferUpdate(&h7seg,buffer);
 			SevenSeg_Update(&h7seg);
 		}
 		if(keyRead){
 			keyRead = false;
 			keyAct[pwmState.currentState]();
+			
 		}
 	
     /* USER CODE END WHILE */

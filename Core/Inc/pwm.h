@@ -9,9 +9,9 @@
 #include "pwm_config.h"
 #include "pwm_deadtime.h"
 #include "adc_utils.h"
+#include "time.h"
 //defines
 
-#define SAMPLE_NUM		20
 //typedefs
 typedef uint16_t Counter;
 typedef bool FLAG;
@@ -67,16 +67,17 @@ typedef struct{
 	uint16_t					currentPower;
 	uint8_t 					currentDeadTime;				// calculate from dtg register 
 	uint8_t 					targetDeadTime;					// calculate from power & temperture & frequency
+	ERROR_CODE 				errorCode;
+	TIME							time;
 }PWM_State_t;
 
 extern PWM_State_t pwmState;
 extern uint32_t fsm_tick_us;
-extern ERROR_CODE errorCode;
 
 extern volatile bool captureReadyCh3;
 extern volatile bool captureReadyCh4;
-extern volatile uint32_t CapturebuffCh4 [SAMPLE_NUM];
-extern volatile uint32_t CapturebuffCh3 [SAMPLE_NUM];
+extern volatile uint32_t CapturebuffCh4 [SAMPLE_NUM_MAX];
+extern volatile uint32_t CapturebuffCh3 [SAMPLE_NUM_MAX];
 //functions
 
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState);									//Change the frequency to the target frequency slowly
@@ -90,8 +91,12 @@ void reset_PWM_control_flags(void);
 bool reset_PWM_control_variables(void);
 bool clear_fault_flags(void);
 bool Enable_ProtectionInterrupts(void);
-bool softStart_set_freq_ramp(void);
-bool softStart_tun_power(void);
+//----------------------------
+void softStart_set_freq_ramp(void);
+void softStart_sampling(void);
+void softStart_tun_power(void);
+void softStart_finishing(void);
+void softStart_Processing(void);
 //----------------------------------
 bool manual_Timers_Enable(void);
 bool set_PWM_frequency(uint16_t freq);

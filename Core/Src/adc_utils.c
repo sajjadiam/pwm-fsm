@@ -1,16 +1,18 @@
 #include "adc_utils.h"
 #include <math.h>
+#include "pwm.h"
+#include "adc.h"
 
-extern ADC_HandleTypeDef hadc1;
 volatile bool adc_dma_done = 0;
 volatile bool adc_inject_done = 0;
 uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
 uint16_t dmaSampleMean[ADC_DMA_CHANNEL_COUNT];
 uint32_t InjectTrigger = 0;											//Inject mode Trigger buffer
-uint16_t currentSample[SAMPLE_NUM] = {0};				//adc sample buffer
-uint16_t voltageSample[SAMPLE_NUM] = {0};
-uint16_t temp1Sample[SAMPLE_NUM] = {0};
-uint16_t temp2Sample[SAMPLE_NUM] = {0};
+uint16_t currentSample[SAMPLE_NUM_MAX] = {0};				//adc sample buffer
+uint16_t currentSmpleMean = 0;
+uint16_t voltageSample[SAMPLE_NUM_MAX] = {0};
+uint16_t temp1Sample[SAMPLE_NUM_MAX] = {0};
+uint16_t temp2Sample[SAMPLE_NUM_MAX] = {0};
 uint16_t currentSampleCounter = 0;							//counter of sample number
 uint16_t currentOffset = 0; 										//ADC no-load value or ADC offset
 uint16_t dmaSampleCounter = 0;
@@ -29,12 +31,16 @@ adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End] = {
 // ISR callback
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	if (hadc->Instance == hadc1.Instance) {
-		adc_dma_done = true;
+		if(dmaSampleCounter < SampleNum[pwmState.currentState]){
+			adc_dma_done = true;
+		}
 	}
 }
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance == ADC1) {
-		adc_inject_done = true;
+		if(currentSampleCounter < SampleNum[pwmState.currentState]){
+			adc_inject_done = true;
+		}
 		/* تبدیل مقدار خام به جریان و ذخیره در متغیر یا ساختار دلخواه */
 	}
 }
@@ -163,13 +169,8 @@ void ADC_Start			(void){
 	return;
 }
 void ADC_Sampling		(void){
-	if(adc_inject_done && currentSampleCounter < SAMPLE_NUM){
-		adc_inject_done = false;
-		currentSample[currentSampleCounter] = HAL_ADCEx_InjectedGetValue(ADC_UNIT, ADC_INJECTED_RANK_1);
-		currentSampleCounter++;
-		return;
-	}
-	else if(currentSampleCounter >= SAMPLE_NUM){
+	INJECT_GET_SAMPLE();
+	if(currentSampleCounter >= SampleNum[pwmState.currentState]){
 		if(HAL_ADCEx_InjectedStop_IT(ADC_UNIT) != HAL_OK){
 			//set error code
 			return;
@@ -181,21 +182,21 @@ void ADC_Sampling		(void){
 }
 void ADC_Processing	(void){
 	uint32_t sampleSum = 0;
-	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
 		sampleSum += currentSample[i];
 	}
-	currentOffset = sampleSum / SAMPLE_NUM + 0.5f;
+	currentOffset = sampleSum / SampleNum[pwmState.currentState] + 0.5f;
 	calibrateMode = ADC_Current_Calibrate_Mode_Measuringccuracy;
 	return;
 }
 void ADC_Measuringccuracy	(void){
 	uint16_t deviation = 0;
 	uint16_t deviationSum = 0;
-	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
+	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
 		deviation = currentSample[i] - currentOffset;
 		deviationSum += (deviation * deviation);
 	}
-	double variance = deviationSum / (SAMPLE_NUM - 1);
+	double variance = deviationSum / (SampleNum[pwmState.currentState] - 1);
 	double standardDeviation = sqrt(variance);
 	if(standardDeviation <= NOISE_THRESHOLD_LSB){
 		calibrateMode = ADC_Current_Calibrate_Mode_ResetTrig;
@@ -242,6 +243,20 @@ void ADC_Finishing	(void){
 }
 //end current calibrate offset
 //----------------------------
-
-
+void DMA_GET_SAMPLE(void){
+	if(adc_dma_done){
+		adc_dma_done = false;
+		voltageSample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_VBUS];
+		temp1Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH1];
+		temp2Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH2];
+		dmaSampleCounter++;
+	}
+}
+void INJECT_GET_SAMPLE(void){
+	if(adc_inject_done){
+		adc_inject_done = false;
+		currentSample[currentSampleCounter] = HAL_ADCEx_InjectedGetValue(ADC_UNIT, ADC_INJECTED_RANK_1);
+		currentSampleCounter++;
+	}
+}
 //end of adc_utils.c

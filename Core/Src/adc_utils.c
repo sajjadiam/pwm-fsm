@@ -92,8 +92,7 @@ bool DC_Voltage_Safety_Checker(void){
 }
 float ADC_to_voltage(uint16_t adc){
 	if(adc != 0){
-		float value = ((float)adc / ADC_MAX) * V_REF;
-		float voltage = value * VOLTAGE_GAIN;
+		float voltage = ADCcounts_to_VoltageV(adc);
 		return voltage;
 	}
 	return 0;
@@ -118,10 +117,8 @@ bool Temperture_Safety_Checker(void){
 }
 float ADC_to_current(uint16_t adc){
 	if(adc != 0){
-		float value = ((float)adc / ADC_MAX) * V_REF;
-		value -= currentOffset;
-		double Vsh = value / G_TOTAL;
-		float current = Vsh / R_SHUNT;
+		uint16_t adcRealVal = adc - currentOffset;
+		float current = ADCcounts_to_CurrentA(adcRealVal);
 		return current;
 	}
 	return 0;

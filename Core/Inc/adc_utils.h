@@ -1,38 +1,11 @@
-#ifndef ADC_UTILS_H
-#define ADC_UTILS_H
+#ifndef __ADC_UTILS_H__
+#define __ADC_UTILS_H__
 
 
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_adc.h"
 #include <stdbool.h>
-
-#define ADC_IDX_VBUS        	0
-#define ADC_IDX_TEMP_CH1    	1
-#define ADC_IDX_TEMP_CH2    	2
-#define ADC_DMA_CHANNEL_COUNT 3
-
-
-
-#define VOLTAGE_GAIN					122 // Practical measured value
-
-#define R0 				10000.0f      	// 10KO at 25°C
-#define B 				3950.0f        	// B value
-#define T0 				298.15f      		// 25°C in Kelvin
-#define R_FIXED 	10000.0f 				// ?????? ???? ???? ????? ???????
-#define ADC_MAX 	4095.0f  				// ??? ADC 12 ???? ????
-#define V_REF 		3.3f       			// ????? ???? ADC
-
-
-
-#define R_SHUNT													0.001f
-#define MAX_CURRENT											12.0f
-#define G_AMP          									20.0f
-#define G_ISO          									8.0f
-#define G_TOTAL          								(G_AMP * G_ISO)
-
-//#define V_ADC_TERM_CURRENT(float)				(R_SHUNT * float * G_AMP * G_ISO)
-//#define ADC_COUNTS_TERM_V(float)				(uint16_t)(V_ADC_TERM_CURRENT(float) * ADC_MAX / V_REF + 0.5f)
-//#define ADC_HIGH_AWD(uint16_t	,	float)	(ADC_COUNTS_TERM_V(float) + uint16_t)
+#include "adc_utils_config.h"
 
 static inline uint16_t CurrentA_to_ADCcounts(float I_amp) {
 	if(V_REF == 0){
@@ -41,13 +14,13 @@ static inline uint16_t CurrentA_to_ADCcounts(float I_amp) {
 	return (I_amp * R_SHUNT * G_TOTAL) * (ADC_MAX / V_REF);
 }
 
-static inline float ADCcounts_to_CurrentA(float counts) {
-	return (counts * V_REF) / (ADC_MAX * R_SHUNT * G_TOTAL);
+static inline float ADCcounts_to_CurrentA(uint16_t counts) {
+	return ((float)counts * V_REF) / (ADC_MAX * R_SHUNT * G_TOTAL);
+}
+static inline float ADCcounts_to_VoltageV(uint16_t counts) {
+	return ((float)counts * V_REF * VOLTAGE_GAIN) / ADC_MAX;
 }
 
-#define SAMPLE_NUM_MAX				25 // 20 is orginal and +5 for over flow
-#define ADC_UNIT							&hadc1
-#define NOISE_THRESHOLD_LSB   3U
 //----------------------------------
 typedef void (*adc_funk)(void);
 typedef enum {

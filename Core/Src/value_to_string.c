@@ -50,10 +50,10 @@ void Sevenseg_FrequencyConvertToString(char* str ,void* P){
 void Sevenseg_CurrentConvertToString(char* str ,void* P){
 	PWM_State_t* pwm = (PWM_State_t*)P;
 	float i = pwm->current;
-	if(i >= 0 && i<10.0){
+	if(i >= 0 && i < 10.0){
 		snprintf(str ,6,"%1.2fA",i);//current in x.xx A
 	}
-	else if(i>= 10.0){
+	else if(i >= 10.0){
 		snprintf(str ,6,"%2.1fA",i);//current in xx.x A
 	}
 }

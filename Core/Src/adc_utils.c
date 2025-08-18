@@ -125,7 +125,7 @@ float ADC_to_current(uint16_t adc){
 }
 //start current calibrate offset
 uint32_t get_ADC_inject_trigger(ADC_HandleTypeDef* hadc){
-	return hadc->Instance->CR2 & ADC_CR2_JEXTSEL;
+	return ((hadc->Instance->CR2) & ADC_CR2_JEXTSEL);
 }
 HAL_StatusTypeDef ADC_inject_set_trigger(ADC_HandleTypeDef* hadc, uint32_t injectTrigger){
 	HAL_ADCEx_InjectedStop_IT(hadc);
@@ -175,6 +175,12 @@ void ADC_Sampling		(void){
 		currentSampleCounter = 0;
 		calibrateMode = ADC_Current_Calibrate_Mode_Processing;
 		return;
+	}
+	else{
+		if(HAL_ADCEx_InjectedStart_IT(ADC_UNIT) != HAL_OK){
+			//set error code
+			return;
+		}
 	}
 }
 void ADC_Processing	(void){

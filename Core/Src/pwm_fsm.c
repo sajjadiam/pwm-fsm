@@ -64,9 +64,9 @@ const StateTransition_t transitions[TRANSITION_NUM] ={
 };
 
 const uint32_t stateTimingTable_us[PwmStateEND] = {
-	[PwmStateStandby]        	= 50000,   	// 50ms
-	[PwmStateInit]           	= 1000,    	// 1ms
-	[PwmStateSoftStart]      	= 1000,			// 1ms
+	[PwmStateStandby]        	= 1,   	// 50ms
+	[PwmStateInit]           	= 1,    	// 1ms
+	[PwmStateSoftStart]      	= 1,			// 1ms
 	[PwmStateResonanceSweep]	= 50000,		//
 	[PwmStateRunning]        	= 50000,    // 
 	[PwmStateRecovery]        = 50000,		//
@@ -74,7 +74,7 @@ const uint32_t stateTimingTable_us[PwmStateEND] = {
 	[PwmStateHardStop]				= 50000			//
 };
 const uint8_t SampleNum[PwmStateEND] = {
-	[PwmStateStandby]        	= 0,   	
+	[PwmStateStandby]        	= 20,   	
 	[PwmStateInit]           	= 20,   
 	[PwmStateSoftStart]      	= 5,		
 	[PwmStateResonanceSweep]	= 5,		

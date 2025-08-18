@@ -154,7 +154,7 @@ void softStart_Processing(void){
 }
 void softStart_tun_power(void){
 	pwmState.voltage = ADC_to_voltage(dmaSampleMean[ADC_IDX_VBUS]);   // ولتاژ باس
-	pwmState.current =ADC_to_current(currentSmpleMean); 							// جریان
+	pwmState.current = ADC_to_current(currentSmpleMean); 							// جریان
 	pwmState.currentPower = pwmState.voltage * pwmState.current;      // توان لحظه‌ای
 	if(pwmState.currentPower > PWM_SOFT_START_LOWER_LIMIT_POWER && pwmState.currentPower < PWM_SOFT_START_UPPER_LIMIT_POWER){
 		softStartMode = SOFT_START_MODE_Finishing;

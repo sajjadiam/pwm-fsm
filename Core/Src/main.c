@@ -74,6 +74,8 @@ static Counter sevenSegCounter =0;
 static FLAG keyRead = false;
 static FLAG hardFaultFlag = false;
 static FLAG sevenSegUpdateFlag = false;
+FLAG flag1 = false;
+FLAG flag2 = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,9 +124,9 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-	Mechnical_Part_Init(mechParts,MECHANICAL_PARTS_END);
-	PWM_FSM_Init();
-	PWM_Command_Key_init(&keys[PWM_COMMMAND_KEY]);
+	//Mechnical_Part_Init(mechParts,MECHANICAL_PARTS_END);
+	//PWM_FSM_Init();
+	//PWM_Command_Key_init(&keys[PWM_COMMMAND_KEY]);
 //	Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Relay],POWER_MODE_ON); اين براي سافت استارت خود باي ديسي يادم باشه درستش کنم 
   /* USER CODE END 2 */
 
@@ -132,12 +134,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	SevenSeg_HandleTypeDef h7seg;
 	SevenSeg_Init(&h7seg);
-	manual_ADC_Enable();
+	//manual_ADC_Enable();
 	HAL_TIM_Base_Start_IT(&htim2);
-  while (1)
+	uint32_t sampleSum = 0;
+	segmentMode = SEVEN_SEGMENT_MODE_Current;
+	while (1)
   {
 		
-		if(hardFaultFlag){
+		/*if(hardFaultFlag){
 			hardFaultFlag = false;
 			PWM_FSM_HandleEvent(Evt_HardwareFault);
 		}
@@ -145,27 +149,53 @@ int main(void)
 			while(DequeueEvent(&evt)){
 				PWM_FSM_HandleEvent(evt);
 			}
-		}
+		}*/
 		if(stateMachineFlag){
 			stateMachineFlag = false;
-			stateFunc[pwmState.currentState]();
+			if(flag1 != true){
+				flag1 = ADC_currentChannelCalibrate();
+			}
+			else if(flag2 != true){
+				flag2 = manual_ADC_Enable();
+				HAL_PWM_TIMER_Enable();
+				HAL_PWM_Init(20000);
+				HAL_PWM_SetDeadTime(255);
+				HAL_PWM_Start();
+				SET_BIT(ADC1->CR2, ADC_CR2_JEXTTRIG);
+			}
+			else if(currentSampleCounter < 20){
+				INJECT_GET_SAMPLE();
+				SET_BIT(ADC1->CR2, ADC_CR2_JEXTTRIG);
+			}
+			else{
+				currentSampleCounter = 0;
+				for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
+					sampleSum += currentSample[i];
+				}
+				currentSmpleMean = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+				sampleSum = 0;
+				pwmState.current = ADC_to_current(currentSmpleMean);
+			}
+		}
+		
+			/*stateFunc[pwmState.currentState]();
 		}
 		if(adc_dma_done){
 			adc_dma_done = false;
 			pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);
 			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_CHANNEL_COUNT);
-		}
+		}*/
 		if(sevenSegUpdateFlag){
 			sevenSegUpdateFlag = 0;
 			sevenSegmentModeHandler[segmentMode](buffer,&pwmState);
 			SevenSeg_BufferUpdate(&h7seg,buffer);
 			SevenSeg_Update(&h7seg);
 		}
-		if(keyRead){
+		/*if(keyRead){
 			keyRead = false;
 			keyAct[pwmState.currentState]();
 			
-		}
+		}*/
 	
     /* USER CODE END WHILE */
 

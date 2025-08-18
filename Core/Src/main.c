@@ -76,6 +76,7 @@ static FLAG hardFaultFlag = false;
 static FLAG sevenSegUpdateFlag = false;
 FLAG flag1 = false;
 FLAG flag2 = false;
+FLAG flag3 = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -138,6 +139,7 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim2);
 	uint32_t sampleSum = 0;
 	segmentMode = SEVEN_SEGMENT_MODE_Current;
+	pwmState.currentState = PwmStateStandby;
 	while (1)
   {
 		
@@ -156,16 +158,15 @@ int main(void)
 				flag1 = ADC_currentChannelCalibrate();
 			}
 			else if(flag2 != true){
-				flag2 = manual_ADC_Enable();
+				flag2 = true;
+				manual_ADC_Enable();
 				HAL_PWM_TIMER_Enable();
 				HAL_PWM_Init(20000);
 				HAL_PWM_SetDeadTime(255);
 				HAL_PWM_Start();
-				SET_BIT(ADC1->CR2, ADC_CR2_JEXTTRIG);
 			}
-			else if(currentSampleCounter < 20){
+			else if(currentSampleCounter < SampleNum[pwmState.currentState]){
 				INJECT_GET_SAMPLE();
-				SET_BIT(ADC1->CR2, ADC_CR2_JEXTTRIG);
 			}
 			else{
 				currentSampleCounter = 0;
@@ -175,6 +176,8 @@ int main(void)
 				currentSmpleMean = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
 				sampleSum = 0;
 				pwmState.current = ADC_to_current(currentSmpleMean);
+				
+				flag3 = true;
 			}
 		}
 		

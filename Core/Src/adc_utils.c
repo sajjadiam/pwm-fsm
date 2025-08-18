@@ -117,7 +117,7 @@ bool Temperture_Safety_Checker(void){
 }
 float ADC_to_current(uint16_t adc){
 	if(adc != 0){
-		uint16_t adcRealVal = adc - currentOffset;
+		uint16_t adcRealVal = (adc - currentOffset + 0.5f);
 		float current = ADCcounts_to_CurrentA(adcRealVal);
 		return current;
 	}
@@ -125,14 +125,29 @@ float ADC_to_current(uint16_t adc){
 }
 //start current calibrate offset
 uint32_t get_ADC_inject_trigger(ADC_HandleTypeDef* hadc){
-	return ((hadc->Instance->CR2) & ADC_CR2_JEXTSEL);
+	return (hadc->Instance->CR2 & ADC_CR2_JEXTSEL);
 }
 HAL_StatusTypeDef ADC_inject_set_trigger(ADC_HandleTypeDef* hadc, uint32_t injectTrigger){
 	HAL_ADCEx_InjectedStop_IT(hadc);
 	HAL_ADC_Stop_DMA(hadc);        
   HAL_ADC_Stop(hadc);
 	MODIFY_REG(hadc->Instance->CR2, ADC_CR2_JEXTSEL, injectTrigger);
-	if((hadc->Instance->CR2 & ADC_CR2_JEXTSEL) == injectTrigger){
+	if((hadc->Instance->CR2 & ADC_CR2_JEXTSEL) != injectTrigger){
+		return HAL_ERROR;
+	}
+	if (injectTrigger == ADC_INJECTED_SOFTWARE_START){
+		// تریگر خارجی را خاموش کن؛ HAL در Start_IT برای SW خودش JSWSTART را می‌زند
+		CLEAR_BIT(hadc->Instance->CR2, ADC_CR2_JEXTTRIG);
+
+		// 4) شروع (یک‌شات) نرم‌افزاری با وقفه
+		//    (اگر وقفه نمی‌خواهی، می‌توانی از HAL_ADCEx_InjectedStart استفاده کنی)
+		return HAL_OK;
+	}
+	else{
+		// منبع خارجی است: اجازهٔ تریگر خارجی Injected را روشن کن
+		SET_BIT(hadc->Instance->CR2, ADC_CR2_JEXTTRIG);
+
+		// 4) آرم‌کردن گروه Injected: از این لحظه با هر TRGO از تایمر شروع می‌شود
 		return HAL_OK;
 	}
 	return HAL_ERROR;

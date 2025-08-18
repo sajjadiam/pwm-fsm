@@ -13,12 +13,11 @@ static inline uint16_t CurrentA_to_ADCcounts(float I_amp) {
 	}
 	return (I_amp * R_SHUNT * G_TOTAL) * (ADC_MAX / V_REF);
 }
-
 static inline float ADCcounts_to_CurrentA(uint16_t counts) {
-	return ((float)counts * V_REF) / (ADC_MAX * R_SHUNT * G_TOTAL);
+	return (float)(counts * V_REF) / (ADC_MAX * R_SHUNT * G_TOTAL);
 }
 static inline float ADCcounts_to_VoltageV(uint16_t counts) {
-	return ((float)counts * V_REF * VOLTAGE_GAIN) / ADC_MAX;
+	return (counts * V_REF * VOLTAGE_GAIN) / ADC_MAX;
 }
 
 //----------------------------------

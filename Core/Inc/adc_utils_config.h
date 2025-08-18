@@ -14,16 +14,15 @@
 #define T0 				298.15f      		// 25°C in Kelvin
 #define R_FIXED 	10000.0f 				// series resistor
 //ADC BASE CONFIG
-#define ADC_MAX 	4095.0f  				// 12 bit ADC 
+#define ADC_MAX 	4095U  				// 12 bit ADC 
 #define V_REF 		3.3f       			// ADC refrense voltage
 #define SAMPLE_NUM_MAX				25 // 20 is orginal and +5 for over flow
 #define ADC_UNIT							&hadc1
 //current gain and conversion
-#define R_SHUNT													0.001f
-#define MAX_CURRENT											12.0f
-#define G_AMP          									20.0f
-#define G_ISO          									8.0f
-#define G_TOTAL          								(G_AMP * G_ISO)
+#define R_SHUNT								0.001f
+#define MAX_CURRENT						12.0f
+#define G_AMP          				10U
+#define G_ISO          				4U
+#define G_TOTAL          			(G_AMP * G_ISO)
 #define NOISE_THRESHOLD_LSB   3U
-
 #endif// __ADC_UTILS_CONFIG__

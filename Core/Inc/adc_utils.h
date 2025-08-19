@@ -42,6 +42,8 @@ extern uint16_t temp2Sample[SAMPLE_NUM_MAX];
 extern uint16_t dmaSampleMean[ADC_DMA_CHANNEL_COUNT];
 extern volatile bool adc_dma_done;
 extern volatile bool adc_inject_done;
+extern volatile bool dmaSampleReady;
+extern volatile bool currentSampleReady;
 extern uint32_t InjectTrigger;
 extern uint16_t currentSample[SAMPLE_NUM_MAX];
 extern uint16_t currentSampleCounter;

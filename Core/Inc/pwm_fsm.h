@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define EVENT_QUEUE_SIZE 		10U
-#define TRANSITION_NUM			26U
+#define TRANSITION_NUM			27U
 #define SAMPLE_NUM_RUNNING	5U
 typedef enum{
 	PwmStateStandby = 0,      	
@@ -112,6 +112,18 @@ typedef enum{
 
 extern volatile SOFT_START_MODE softStartMode;
 
+//----------------------------------
+typedef enum{
+	RS_sampling		= 0,
+	RS_processing,
+	RS_safatyCheck,
+	RS_settingChanges,
+	RS_Finishing,
+	RS_END,
+}ResonanceSweepSub;
+
+extern volatile ResonanceSweepSub resonanceSweepMode;
+
 //----------------------------------------
 bool Action_None(void);                // هیچ کاری انجام نمی‌ده (برای ترنزیشن‌های منطقی بدون عملیات)
 bool Action_EnterInit(void);               // مقداردهی اولیه سخت‌افزار و پارامترها
@@ -147,13 +159,18 @@ void EventQueue_Clear(void);
 //---------------------------------------------
 typedef void (*keyAction)(void);
 extern const keyAction keyAct[PwmStateEND];
-void stateStandby_keyCallback(void);
-void stateInit_keyCallback(void);
-void stateSoftStart_keyCallback(void);
+void stateStandby_keyCallback				(void);
+void stateInit_keyCallback					(void);
+void stateSoftStart_keyCallback			(void);
 void stateResonanceSweep_keyCallback(void);
-void stateRunning_keyCallback(void);
-void stateRecovery_keyCallback(void);
-void stateSoftStop_keyCallback(void);
-void stateHardStop_keyCallback(void);
-
+void stateRunning_keyCallback				(void);
+void stateRecovery_keyCallback			(void);
+void stateSoftStop_keyCallback			(void);
+void stateHardStop_keyCallback			(void);
+//------------------------------------
+void resonanceSweep_sampling			(void);
+void resonanceSweep_processing		(void);
+void resonanceSweep_safatyCheck		(void);
+void resonanceSweep_settingChanges(void);
+void resonanceSweep_Finishing			(void);
 #endif // __PWM_FSM_H__

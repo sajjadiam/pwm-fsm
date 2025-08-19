@@ -135,15 +135,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	SevenSeg_HandleTypeDef h7seg;
 	SevenSeg_Init(&h7seg);
-	//manual_ADC_Enable();
-	HAL_TIM_Base_Start_IT(&htim2);
-	uint32_t sampleSum = 0;
-	segmentMode = SEVEN_SEGMENT_MODE_Current;
-	pwmState.currentState = PwmStateStandby;
 	while (1)
   {
 		
-		/*if(hardFaultFlag){
+		if(hardFaultFlag){
 			hardFaultFlag = false;
 			PWM_FSM_HandleEvent(Evt_HardwareFault);
 		}
@@ -151,54 +146,21 @@ int main(void)
 			while(DequeueEvent(&evt)){
 				PWM_FSM_HandleEvent(evt);
 			}
-		}*/
+		}
 		if(stateMachineFlag){
 			stateMachineFlag = false;
-			if(flag1 != true){
-				flag1 = ADC_currentChannelCalibrate();
-			}
-			else if(flag2 != true){
-				flag2 = true;
-				manual_ADC_Enable();
-				HAL_PWM_TIMER_Enable();
-				HAL_PWM_Init(20000);
-				HAL_PWM_SetDeadTime(255);
-				HAL_PWM_Start();
-			}
-			else if(currentSampleCounter < SampleNum[pwmState.currentState]){
-				INJECT_GET_SAMPLE();
-			}
-			else{
-				currentSampleCounter = 0;
-				for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
-					sampleSum += currentSample[i];
-				}
-				currentSmpleMean = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
-				sampleSum = 0;
-				pwmState.current = ADC_to_current(currentSmpleMean);
-				
-				flag3 = true;
-			}
+			stateFunc[pwmState.currentState]();
 		}
-		
-			/*stateFunc[pwmState.currentState]();
-		}
-		if(adc_dma_done){
-			adc_dma_done = false;
-			pwmState.voltage = ADC_to_voltage(adc_dma_buffer[ADC_IDX_VBUS]);
-			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_CHANNEL_COUNT);
-		}*/
 		if(sevenSegUpdateFlag){
 			sevenSegUpdateFlag = 0;
 			sevenSegmentModeHandler[segmentMode](buffer,&pwmState);
 			SevenSeg_BufferUpdate(&h7seg,buffer);
 			SevenSeg_Update(&h7seg);
 		}
-		/*if(keyRead){
+		if(keyRead){
 			keyRead = false;
 			keyAct[pwmState.currentState]();
-			
-		}*/
+		}
 	
     /* USER CODE END WHILE */
 

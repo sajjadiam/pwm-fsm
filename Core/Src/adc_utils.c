@@ -3,8 +3,10 @@
 #include "pwm.h"
 #include "adc.h"
 
-volatile bool adc_dma_done = 0;
-volatile bool adc_inject_done = 0;
+volatile bool adc_dma_done = false;
+volatile bool adc_inject_done = false;
+volatile bool dmaSampleReady = false;
+volatile bool currentSampleReady = false;
 uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
 uint16_t dmaSampleMean[ADC_DMA_CHANNEL_COUNT];
 uint32_t InjectTrigger = 0;											//Inject mode Trigger buffer
@@ -99,11 +101,10 @@ float ADC_to_voltage(uint16_t adc){
 }
 float ADC_to_temperture(uint16_t adc){
 	if(adc != 0){
-		float V_adc = ((float)adc / ADC_MAX) * V_REF;
-		float R_ntc = R_FIXED * ((V_REF / V_adc) - 1.0);
-		float temp_kelvin = 1.0 / ((1.0 / T0) + (1.0 / B) * log(R_ntc / R0));
-		float temp_celsius = temp_kelvin - 273.15;
-		return temp_celsius;
+		float R_ntc = R_FIXED * ((float)adc) / (ADC_MAX - (float)adc);
+		float invT = (1.0f / T0) + (1.0f / B) * logf(R_ntc / R0);
+    float temp_c = (1.0f / invT) - 273.15f;
+		return temp_c;
 	}
 	return 0;
 }
@@ -268,6 +269,11 @@ void DMA_GET_SAMPLE(void){
 		temp1Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH1];
 		temp2Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH2];
 		dmaSampleCounter++;
+		if(dmaSampleCounter >= SampleNum[pwmState.currentState]){
+			dmaSampleCounter = 0;
+			dmaSampleReady = true;
+			return;
+		}
 	}
 }
 void INJECT_GET_SAMPLE(void){
@@ -275,6 +281,11 @@ void INJECT_GET_SAMPLE(void){
 		adc_inject_done = false;
 		currentSample[currentSampleCounter] = HAL_ADCEx_InjectedGetValue(ADC_UNIT, ADC_INJECTED_RANK_1);
 		currentSampleCounter++;
+		if(currentSampleCounter >= SampleNum[pwmState.currentState]){
+			currentSampleCounter = 0;
+			currentSampleReady = true;
+			return;
+		}
 	}
 }
 //end of adc_utils.c

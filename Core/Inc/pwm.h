@@ -73,11 +73,12 @@ typedef struct{
 
 extern PWM_State_t pwmState;
 extern uint32_t fsm_tick_us;
-
+extern volatile bool captureDoneCh3;
+extern volatile bool captureDoneCh4;
 extern volatile bool captureReadyCh3;
 extern volatile bool captureReadyCh4;
-extern volatile uint32_t CapturebuffCh4 [SAMPLE_NUM_MAX];
-extern volatile uint32_t CapturebuffCh3 [SAMPLE_NUM_MAX];
+extern uint32_t CapturebuffCh4 [SAMPLE_NUM_MAX];
+extern uint32_t CapturebuffCh3 [SAMPLE_NUM_MAX];
 //functions
 
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState);									//Change the frequency to the target frequency slowly
@@ -102,4 +103,6 @@ bool manual_Timers_Enable(void);
 bool set_PWM_frequency(uint16_t freq);
 bool manual_PWM_Enable(void);
 bool set_PWM_control_variables(PWM_State_t* pwmState);								//initial pwm structure
+//------------------------------------------------
+void get_IC_sample(uint32_t* buff ,uint32_t value ,volatile uint32_t counter);
 #endif//__PWM_H__

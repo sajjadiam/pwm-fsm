@@ -7,6 +7,7 @@
 volatile bool stateMachineFlag = false;
 volatile Init_MODE initMode = Init_MODE_DMA_Sampling;
 volatile SOFT_START_MODE softStartMode = SOFT_START_MODE_setFrequencyRamp;
+volatile ResonanceSweepSub resonanceSweepMode = RS_sampling;
 EventQueue_t eventQueue;	
 KeyPinConfig keys[END_KEY];
 ERROR_CODE errorCode = ERROR_CODE_None;
@@ -26,6 +27,13 @@ const State_Machine_Func softStartMachine[SOFT_START_MODE_END] = {
 	[SOFT_START_MODE_tunPower]					= softStart_tun_power,
 	[SOFT_START_MODE_Finishing]					= softStart_finishing,
 };
+const State_Machine_Func resonanceSweepMachine[RS_END] = {
+	[RS_sampling]				= resonanceSweep_sampling,
+	[RS_processing]			= resonanceSweep_processing,
+	[RS_safatyCheck]		= resonanceSweep_safatyCheck,
+	[RS_settingChanges]	= resonanceSweep_settingChanges,
+	[RS_Finishing]			= resonanceSweep_Finishing,
+};
 const StateTransition_t transitions[TRANSITION_NUM] ={
 	// ====== STANDBY ======
 	{PwmStateStandby, 				Evt_StartCommand,      			Action_EnterInit,         PwmStateInit						},	// 1
@@ -38,29 +46,30 @@ const StateTransition_t transitions[TRANSITION_NUM] ={
 	{PwmStateSoftStart, 			Evt_HardwareFault,  				Action_Shutdown,      		PwmStateHardStop				},	// 6
 	// ====== RESONANCE SWEEP ======
 	{PwmStateResonanceSweep, 	Evt_ResonanceFound, 				Action_EnterRunning,  		PwmStateRunning					},	// 7
-	{PwmStateResonanceSweep, 	Evt_ResonanceLost,  				Action_FailSoftStop,  		PwmStateSoftStop				},	// 8
-	{PwmStateResonanceSweep, 	Evt_StopCommand,  					Action_FailSoftStop,  		PwmStateSoftStop				},	// 9
-	{PwmStateResonanceSweep, 	Evt_HardwareFault,  				Action_Shutdown,      		PwmStateHardStop				},	// 10
+	{PwmStateResonanceSweep, 	Evt_OverPowerDetected, 			Action_EnterRunning,  		PwmStateRunning					},	// 8
+	{PwmStateResonanceSweep, 	Evt_ResonanceLost,  				Action_FailSoftStop,  		PwmStateSoftStop				},	// 9
+	{PwmStateResonanceSweep, 	Evt_StopCommand,  					Action_FailSoftStop,  		PwmStateSoftStop				},	// 10
+	{PwmStateResonanceSweep, 	Evt_HardwareFault,  				Action_Shutdown,      		PwmStateHardStop				},	// 11
 	// ====== RUNNING ======
-	{PwmStateRunning, 				Evt_TargetPowerReached,    	Action_None,           		PwmStateRunning					},	// 11
-	{PwmStateRunning, 				Evt_StopCommand,           	Action_SoftStop,       		PwmStateSoftStop				},	// 12
-	{PwmStateRunning, 				Evt_ResonanceLost,         	Action_RecoveryMode,   		PwmStateRecovery				},	// 13
-	{PwmStateRunning, 				Evt_OverPowerDetected,     	Action_RecoveryMode,   		PwmStateRecovery				},	// 14
-	{PwmStateRunning, 				Evt_OverTempDetected,      	Action_RecoveryMode,   		PwmStateRecovery				},	// 15
-	{PwmStateRunning, 				Evt_UnderVoltageDetected,  	Action_RecoveryMode,   		PwmStateRecovery				},	// 16
-	{PwmStateRunning, 				Evt_OverCurrentDetected,   	Action_RecoveryMode,   		PwmStateRecovery				},	// 17
-	{PwmStateRunning, 				Evt_ShortCircuitDetected,  	Action_Shutdown,       		PwmStateHardStop				},	// 18
-	{PwmStateRunning, 				Evt_ArcDetected,           	Action_Shutdown,       		PwmStateHardStop				},	// 19
+	{PwmStateRunning, 				Evt_TargetPowerReached,    	Action_None,           		PwmStateRunning					},	// 12
+	{PwmStateRunning, 				Evt_StopCommand,           	Action_SoftStop,       		PwmStateSoftStop				},	// 13
+	{PwmStateRunning, 				Evt_ResonanceLost,         	Action_RecoveryMode,   		PwmStateRecovery				},	// 14
+	{PwmStateRunning, 				Evt_OverPowerDetected,     	Action_RecoveryMode,   		PwmStateRecovery				},	// 15
+	{PwmStateRunning, 				Evt_OverTempDetected,      	Action_RecoveryMode,   		PwmStateRecovery				},	// 16
+	{PwmStateRunning, 				Evt_UnderVoltageDetected,  	Action_RecoveryMode,   		PwmStateRecovery				},	// 17
+	{PwmStateRunning, 				Evt_OverCurrentDetected,   	Action_RecoveryMode,   		PwmStateRecovery				},	// 18
+	{PwmStateRunning, 				Evt_ShortCircuitDetected,  	Action_Shutdown,       		PwmStateHardStop				},	// 19
+	{PwmStateRunning, 				Evt_ArcDetected,           	Action_Shutdown,       		PwmStateHardStop				},	// 20
 	// ====== RECOVERY ======
-	{PwmStateRecovery, 				Evt_TuningCommand,        	Action_Tune,           		PwmStateRunning					},	// 20
-	{PwmStateRecovery, 				Evt_StopCommand,           	Action_SoftStop,       		PwmStateSoftStop				},	// 21
-	{PwmStateRecovery, 				Evt_HardwareFault,        	Action_Shutdown,       		PwmStateHardStop				},	// 22
-	{PwmStateRecovery, 				Evt_GridFaultDetected,    	Action_Shutdown,       		PwmStateHardStop				},	// 23
-	{PwmStateRecovery, 				Evt_FaultCleared,         	Action_SoftRestart,    		PwmStateSoftStart				},	// 24
-	// ====== SOFT STOP ======
-	{PwmStateSoftStop, 				Evt_SoftStopDone,         	Action_EnterStandby,   		PwmStateStandby					},	// 25
+	{PwmStateRecovery, 				Evt_TuningCommand,        	Action_Tune,           		PwmStateRunning					},	// 21
+	{PwmStateRecovery, 				Evt_StopCommand,           	Action_SoftStop,       		PwmStateSoftStop				},	// 22
+	{PwmStateRecovery, 				Evt_HardwareFault,        	Action_Shutdown,       		PwmStateHardStop				},	// 23
+	{PwmStateRecovery, 				Evt_GridFaultDetected,    	Action_Shutdown,       		PwmStateHardStop				},	// 24
+	{PwmStateRecovery, 				Evt_FaultCleared,         	Action_SoftRestart,    		PwmStateSoftStart				},	// 25
+	// ====== SOFT STOP =====
+	{PwmStateSoftStop, 				Evt_SoftStopDone,         	Action_EnterStandby,   		PwmStateStandby					},	// 26
 	// ====== HARD STOP ======
-	{PwmStateHardStop, 				Evt_FaultCleared,         	Action_ResetSystem,    		PwmStateStandby					},	// 26
+	{PwmStateHardStop, 				Evt_FaultCleared,         	Action_ResetSystem,    		PwmStateStandby					},	// 27
 };
 
 const uint32_t stateTimingTable_us[PwmStateEND] = {
@@ -255,7 +264,6 @@ void stateInit(void){
 }
 void stateSoftStart(void){
 	softStartMachine[softStartMode]();
-	EnqueueEvent(Evt_SoftStartDone);
 }
 void stateResonanceSweep(void){
 	if(!captureReadyCh3 || !captureReadyCh4){
@@ -349,21 +357,15 @@ void stateHardStop_keyCallback(void){
 }
 //init state machine function
 void DMA_Sampling				(void){
-	if(adc_dma_done){
-		adc_dma_done = false;
-		voltageSample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_VBUS];
-		temp1Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH1];
-		temp2Sample[dmaSampleCounter] = adc_dma_buffer[ADC_IDX_TEMP_CH2];
+	if(dmaSampleReady == false){
+		DMA_GET_SAMPLE();
 		return;
 	}
-	else if(dmaSampleCounter >= SampleNum[pwmState.currentState]){
-		if(HAL_ADC_Stop_DMA(ADC_UNIT) != HAL_OK){
-			return;
-		}
-		dmaSampleCounter = 0;
-		initMode = Init_MODE_DMA_Processing;
+	if(HAL_ADC_Stop_DMA(ADC_UNIT) != HAL_OK){
 		return;
 	}
+	initMode = Init_MODE_DMA_Processing;
+	dmaSampleReady = false;
 	return;
 }
 void DMA_Processing			(void){
@@ -416,7 +418,35 @@ void initFinishing			(void){
 //soft start state machine function
 
 //Resonance Sweep state machine function
+void resonanceSweep_sampling			(void){
+	//get input cpture sample for voltage and current signal of induction furnace
+	
+	//get current sample of inject channel for checking safety and calculating power
+	if(currentSampleReady == false){
+		INJECT_GET_SAMPLE();
+	}
+	//get voltage and temperture from dma_adc to checking safety and calculating power
+	if(dmaSampleReady == false){
+		DMA_GET_SAMPLE();
+	}
+	//disable NVIC
+}
+void resonanceSweep_processing		(void){
+	//get average of top value
+}
+void resonanceSweep_safatyCheck		(void){
+	//safety check of top value
+	//check power limit for this state
+}
 
+void resonanceSweep_settingChanges(void){
+	//calculate phase diff
+	//set new deadtime for tun power if needed
+	//set new freq and back to sampling or Confirmation reso freq and to finishing
+}
+void resonanceSweep_Finishing			(void){
+	EnqueueEvent(Evt_ResonanceFound);
+}
 //Running state machine function
 
 //Recovery state machine function

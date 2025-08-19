@@ -116,14 +116,16 @@ void softStart_set_freq_ramp(void){
 	return ;
 }
 void softStart_sampling(void){
-	DMA_GET_SAMPLE();
-	INJECT_GET_SAMPLE();
-	if(currentSampleCounter >= SampleNum[pwmState.currentState] && dmaSampleCounter >= SampleNum[pwmState.currentState]){
-		if(!manual_ADC_Disable()){
-			return;
-		}
+	if(dmaSampleReady == false){
+		DMA_GET_SAMPLE();
+	}
+	if(currentSampleReady == false){
+		INJECT_GET_SAMPLE();
+	}
+	else if(currentSampleReady == true && dmaSampleReady == true){
 		softStartMode = SOFT_START_MODE_processing;
-		return;
+		currentSampleReady = false;
+		dmaSampleReady = false;
 	}
 }
 void softStart_Processing(void){
@@ -150,7 +152,6 @@ void softStart_Processing(void){
 	}
 	currentSmpleMean = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
 	softStartMode = SOFT_START_MODE_tunPower;
-	return;
 }
 void softStart_tun_power(void){
 	pwmState.voltage = ADC_to_voltage(dmaSampleMean[ADC_IDX_VBUS]);   // ولتاژ باس
@@ -158,6 +159,7 @@ void softStart_tun_power(void){
 	pwmState.currentPower = pwmState.voltage * pwmState.current;      // توان لحظه‌ای
 	if(pwmState.currentPower > PWM_SOFT_START_LOWER_LIMIT_POWER && pwmState.currentPower < PWM_SOFT_START_UPPER_LIMIT_POWER){
 		softStartMode = SOFT_START_MODE_Finishing;
+		return;
 	}
 	else if(pwmState.currentPower < PWM_SOFT_START_LOWER_LIMIT_POWER){
 		pwmState.currentDeadTime--;
@@ -166,13 +168,10 @@ void softStart_tun_power(void){
 		pwmState.currentDeadTime++;
 	}
 	HAL_PWM_SetDeadTime(pwmState.currentDeadTime);
-	if(!manual_ADC_Enable()){
-		return;
-	}
 	softStartMode = SOFT_START_MODE_sampling;
 }
 void softStart_finishing(void){
-	//do nothing
+	EnqueueEvent(Evt_SoftStartDone);
 }
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 	uint32_t arr =  HAL_PWM_GetARR();
@@ -202,31 +201,36 @@ void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 	}
 }
 //--------------------------
-volatile uint32_t CapturebuffCh3 [SAMPLE_NUM_MAX];
+uint32_t CapturebuffCh3 [SAMPLE_NUM_MAX];
 volatile uint32_t CaptureCounterCh3 = 0;
-volatile uint32_t CapturebuffCh4 [SAMPLE_NUM_MAX];
+uint32_t CapturebuffCh4 [SAMPLE_NUM_MAX];
 volatile uint32_t CaptureCounterCh4 = 0;
 volatile bool captureReadyCh3 = false;
 volatile bool captureReadyCh4 = false;
+volatile bool captureDoneCh3 = false;
+volatile bool captureDoneCh4 = false;
+void get_IC_sample(uint32_t* buff ,uint32_t value ,volatile uint32_t counter){
+	*(buff + counter) = value;
+	counter++;
+	if(counter >= SampleNum[pwmState.currentState]){
+		captureReadyCh3 = true;
+		counter = 0;
+	}
+}
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance == TIM1){  
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3){
-			CapturebuffCh3[CaptureCounterCh3] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
-			CaptureCounterCh3++;
-			if(CaptureCounterCh3 >= SampleNum[pwmState.currentState]){
-				captureReadyCh3 = true;
-				CaptureCounterCh3 = 0;
-			}
+			captureDoneCh3 = true;
+			get_IC_sample(CapturebuffCh3,HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3),CaptureCounterCh3);
 		}
-		else if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4){
-			CapturebuffCh4[CaptureCounterCh4] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4);
-			CaptureCounterCh4++;
-			if(CaptureCounterCh4 >= SampleNum[pwmState.currentState]){
-				captureReadyCh4 = true;
-				CaptureCounterCh4 = 0;
-			}
+		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4){
+			captureDoneCh4 = true;
+			get_IC_sample(CapturebuffCh4,HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4),CaptureCounterCh4);
 		}
 	}
+}
+void InputCapture_GET_SAMPLE(TIM_HandleTypeDef *htim,uint32_t Channel){
+	
 }
 uint32_t captureDiffHandler(uint32_t* time){
 	uint32_t diffSum = 0;

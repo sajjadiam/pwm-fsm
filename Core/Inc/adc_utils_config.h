@@ -17,6 +17,7 @@
 #define ADC_MAX 	4095U  				// 12 bit ADC 
 #define V_REF 		3.3f       			// ADC refrense voltage
 #define SAMPLE_NUM_MAX				25 // 20 is orginal and +5 for over flow
+#define SAMPLE_NUM						20
 #define ADC_UNIT							&hadc1
 //current gain and conversion
 #define R_SHUNT								0.001f

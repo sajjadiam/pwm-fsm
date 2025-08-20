@@ -1,10 +1,12 @@
 #include "pwm.h"
 #include "tim.h"
 #include "adc.h"
+#include <string.h>
 
 uint32_t fsm_tick_us = 0;
 static uint16_t softStart_arrCounter = 0;
 PWM_State_t pwmState;
+IC_Handler captureHndler[IC_END];
 
 bool manual_PWM_Disable(void){
 	HAL_PWM_Stop(); // متوقف کردن خروجی PWM
@@ -200,51 +202,61 @@ void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 		}
 	}
 }
-//--------------------------
-uint32_t CapturebuffCh3 [SAMPLE_NUM_MAX];
-volatile uint32_t CaptureCounterCh3 = 0;
-uint32_t CapturebuffCh4 [SAMPLE_NUM_MAX];
-volatile uint32_t CaptureCounterCh4 = 0;
-volatile bool captureReadyCh3 = false;
-volatile bool captureReadyCh4 = false;
-volatile bool captureDoneCh3 = false;
-volatile bool captureDoneCh4 = false;
-void get_IC_sample(uint32_t* buff ,uint32_t value ,volatile uint32_t counter){
-	*(buff + counter) = value;
-	counter++;
-	if(counter >= SampleNum[pwmState.currentState]){
-		captureReadyCh3 = true;
-		counter = 0;
-	}
+//input capture
+void captureUnitInit(IC_Handler *cu ,TIM_HandleTypeDef *htim ,uint32_t channel){
+	cu->htim = htim;
+	cu->ch = channel;
+	cu->armed = 1;
+	cu->ready = 0;
+	cu->count = 0;
+	cu->avg = 0;
+	memset(cu->buff,0,sizeof cu->buff);
+}
+void IC_Init(void){
+	captureUnitInit(&captureHndler[IC_CH3],&htim1,TIM_CHANNEL_3);
+	captureUnitInit(&captureHndler[IC_CH4],&htim1,TIM_CHANNEL_4);
 }
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
-	if(htim->Instance == TIM1){  
+	if(htim->Instance == TIM1){
+		
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3){
-			captureDoneCh3 = true;
-			get_IC_sample(CapturebuffCh3,HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3),CaptureCounterCh3);
+			IC_Handler *cu = &captureHndler[IC_CH3];
+			if (cu->armed && cu->count < SAMPLE_NUM) {
+				cu->buff[cu->count++] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
+				if (cu->count >= SAMPLE_NUM){ 
+					cu->ready = 1; 
+					cu->armed = 0;
+					cu->count = 0;
+				}
+			}
 		}
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4){
-			captureDoneCh4 = true;
-			get_IC_sample(CapturebuffCh4,HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4),CaptureCounterCh4);
+			IC_Handler *cu = &captureHndler[IC_CH4];
+			if (cu->armed && cu->count < SAMPLE_NUM) {
+				cu->buff[cu->count++] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
+				if (cu->count >= SAMPLE_NUM){ 
+					cu->ready = 1; 
+					cu->armed = 0;
+					cu->count = 0;
+				}
+			}
 		}
 	}
 }
-void InputCapture_GET_SAMPLE(TIM_HandleTypeDef *htim,uint32_t Channel){
-	
-}
-uint32_t captureDiffHandler(uint32_t* time){
-	uint32_t diffSum = 0;
-	uint32_t t_prev = CapturebuffCh3[0];
-	uint32_t period_sum = 0;
-	for(int i=1; i<SampleNum[pwmState.currentState]; i++){
-    uint32_t t = CapturebuffCh3[i];
-    uint32_t diff = (t >= t_prev) ? (t - t_prev)
-                                  : ((htim1.Init.Period + 1) - t_prev + t);
-    period_sum += diff;
-    t_prev = t;
-}
-	float avgPeriod = (float)period_sum / (SampleNum[pwmState.currentState]-1);
-	return diffSum;
+void IC_processSample(IC_Handler *cu ,uint16_t len){
+	uint8_t i;
+	const uint8_t sampleNumber = SAMPLE_NUM - 1;
+	uint32_t sampleSum = 0;
+	while(len-- > 0){
+		for(i = 0;i < sampleNumber;i++){
+			sampleSum += ((cu->buff[i + 1] > cu->buff[i]) ? (cu->buff[i + 1] - cu->buff[i])
+				: ((cu->htim->Init.Period + 1) - cu->buff[i] + cu->buff[i + 1]));
+		}
+		cu->avg = sampleSum / sampleNumber;
+		cu->armed = 1;
+		cu->ready = 0;
+		cu++;
+	}
 }
 //--------------------------
 

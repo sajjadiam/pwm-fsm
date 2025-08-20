@@ -49,11 +49,31 @@ typedef enum{
 	ERROR_CODE_PwmStateHardStop, 
 	ERROR_CODE_End,
 }ERROR_CODE;
+typedef enum{
+	IC_CH3	= 0,
+	IC_CH4,
+	IC_END,
+}IC_CH;
+typedef struct{
+	TIM_HandleTypeDef 	*htim;
+	uint32_t						ch;
+	uint32_t 						buff[SAMPLE_NUM_MAX];
+	volatile uint16_t 	count;
+	volatile uint16_t		avg;
+	struct{
+		volatile 					uint8_t armed		:1;
+		volatile 					uint8_t ready		:1;
+	};
+}IC_Handler;
+extern IC_Handler captureHndler[IC_END];
+void captureUnitInit(IC_Handler *cu ,TIM_HandleTypeDef *htim ,uint32_t channel);
+void IC_Init(void);
+void IC_getSample(IC_Handler *cu ,uint16_t len);
+void IC_processSample(IC_Handler *cu ,uint16_t len);
 typedef struct{												// flags of pwm
 	uint32_t freqRampDone 	: 1;
 	uint32_t freqLock				: 1;
 }PWM_Flags;
-
 
 typedef struct{
 	PWM_State_Machine currentState;	// current state 
@@ -73,12 +93,6 @@ typedef struct{
 
 extern PWM_State_t pwmState;
 extern uint32_t fsm_tick_us;
-extern volatile bool captureDoneCh3;
-extern volatile bool captureDoneCh4;
-extern volatile bool captureReadyCh3;
-extern volatile bool captureReadyCh4;
-extern uint32_t CapturebuffCh4 [SAMPLE_NUM_MAX];
-extern uint32_t CapturebuffCh3 [SAMPLE_NUM_MAX];
 //functions
 
 void Set_PWM_FrequencySmooth(PWM_State_t* pwmState);									//Change the frequency to the target frequency slowly
@@ -104,5 +118,5 @@ bool set_PWM_frequency(uint16_t freq);
 bool manual_PWM_Enable(void);
 bool set_PWM_control_variables(PWM_State_t* pwmState);								//initial pwm structure
 //------------------------------------------------
-void get_IC_sample(uint32_t* buff ,uint32_t value ,volatile uint32_t counter);
+
 #endif//__PWM_H__

@@ -34,4 +34,5 @@ final/pwm.o: ..\Core\Src\pwm.c ..\Core\Inc\pwm.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h ..\Core\Inc\pwm_config.h \
   ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\adc_utils.h \
   ..\Core\Inc\adc_utils_config.h ..\Core\Inc\time.h ..\Core\Inc\tim.h \
-  ..\Core\Inc\main.h ..\Core\Inc\adc.h
+  ..\Core\Inc\main.h ..\Core\Inc\adc.h \
+  C:\Keil_v5\ARM\ARMCLANG\include\string.h

@@ -215,16 +215,18 @@ bool Action_EnterSoftStart(void){
 	return true;
 }
 bool Action_StartSweep(void){
-	if(!HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3)){ //start input capture
+	IC_Init();
+	__HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_CC3 | TIM_FLAG_CC4); // پاکسازی پرچم‌ها
+	if(HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3) != HAL_OK){ //start input capture
 		// error
 		return false;
 	}
-	if(!HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4)){ //start input capture
+	if(HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4) != HAL_OK){ //start input capture
 		// error
 		return false;
 	}
 	return true;
-}  
+}
 bool Action_EnterRunning(void){
 	return true;
 }
@@ -266,7 +268,7 @@ void stateSoftStart(void){
 	softStartMachine[softStartMode]();
 }
 void stateResonanceSweep(void){
-	if(!captureReadyCh3 || !captureReadyCh4){
+	/*if(!captureReadyCh3 || !captureReadyCh4){
 		return;
 	}
 	if(captureReadyCh3 && captureReadyCh4){
@@ -282,7 +284,7 @@ void stateResonanceSweep(void){
 		HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4); //start input capture
 		// چک کردن و قفل فرکانس  در غير اينصورت بازگشت و نمونه گيري مجدد
 	}
-	EnqueueEvent(Evt_ResonanceFound);
+	EnqueueEvent(Evt_ResonanceFound);*/
 }
 void stateRunning(void){
 	
@@ -429,7 +431,9 @@ void resonanceSweep_sampling			(void){
 	if(dmaSampleReady == false){
 		DMA_GET_SAMPLE();
 	}
-	//disable NVIC
+	if(captureHndler[IC_CH3].ready && captureHndler[IC_CH4].ready && currentSampleReady == true && dmaSampleReady == true){
+		resonanceSweepMode = RS_processing;
+	}
 }
 void resonanceSweep_processing		(void){
 	//get average of top value

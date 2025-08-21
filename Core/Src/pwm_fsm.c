@@ -216,7 +216,7 @@ bool Action_EnterSoftStart(void){
 }
 bool Action_StartSweep(void){
 	IC_Init();
-	__HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_CC3 | TIM_FLAG_CC4); // پاکسازی پرچم‌ها
+	__HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_CC3 | TIM_FLAG_CC4 | TIM_FLAG_CC3OF | TIM_FLAG_CC4OF);
 	if(HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3) != HAL_OK){ //start input capture
 		// error
 		return false;

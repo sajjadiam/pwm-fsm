@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "iwdg.h"
 #include "tim.h"
 #include "gpio.h"
 
@@ -57,6 +58,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+SevenSeg_HandleTypeDef h7seg;
 char buffer[6] = "     ";
 PWM_Event_t evt;
 const State_Machine_Func stateFunc[PwmStateEND] = {
@@ -83,9 +85,6 @@ FLAG flag3 = false;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-void System_PowerOn(void);
-void EarlySafeIO(void);
-void Clock_Init(void);
 //-----------------------------pwm function prototype start--------------------------
 void PWM_Command_Key_init(volatile KeyPinConfig* key);
 /* USER CODE END PFP */
@@ -103,7 +102,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -119,7 +117,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+	HAL_Delay(10);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -128,16 +126,22 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
+	ResetFlag_t rf = Read_Reset_Cause_F1();
+	PWM_FSM_Init();                         // ماشین حالت PWM را در حالت STANDBY قرار می‌دهد
+	SevenSeg_Init(&h7seg);                  // راه‌اندازی ۷‑سگمنت، نور کم
+	PWM_Command_Key_init(&keys[PWM_COMMMAND_KEY]); // کلید فرمان Start با دیبانس داخلی
+	IWDG_Start_F1(1000 , 40000 );
 	//Mechnical_Part_Init(mechParts,MECHANICAL_PARTS_END);
 	//PWM_FSM_Init();
 	//PWM_Command_Key_init(&keys[PWM_COMMMAND_KEY]);
-//	Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Relay],POWER_MODE_ON); اين براي سافت استارت خود باي ديسي يادم باشه درستش کنم 
+	//	Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Relay],POWER_MODE_ON); اين براي سافت استارت خود باي ديسي يادم باشه درستش کنم 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	SevenSeg_HandleTypeDef h7seg;
+	
 	SevenSeg_Init(&h7seg);
 	while (1)
   {
@@ -187,10 +191,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -221,32 +226,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-//----------------------system power on----------------------------
-void System_PowerOn(void){
-  EarlySafeIO();         // 0
-//  Clock_Init();          // 1
-//  BOR_Enable();          // 1
-//  reset_flags_t rf = ResetCause_ReadAndClear(); // 1
-//  WDT_Hold(); Delay_ms(15);                     // 2
-//  Drivers_Power(false);  // 3
 
-//  if(!PWM_FSM_Init())   return Fault_Hard(E101);
-//  if(!SevenSeg_Init(&h7seg)) return Fault_Hard(E102);
-//  if(!PWM_Command_Key_init(&keys[PWM_COMMMAND_KEY])) return Fault_Hard(E103);
-
-//  SevenSeg_Print4("INIT"); Delay_ms(200);
-//  SevenSeg_Dim(2);       // نور کم در استندبای
-
-//  WDT_Start(); FSM_Goto(STANDBY);
-}
-void EarlySafeIO(void){
-	HAL_PWM_Stop();
-	HAL_PWM_TIMER_Disable();
-	Mechnical_Part_Init(mechParts ,MECHANICAL_PARTS_END);
-}
-void Clock_Init(void){
-	
-}
 //---------------------key functions start-----------------------------------------
 
 //void pwmStartStopKeyCallback(PWM_State_t* pwm ){

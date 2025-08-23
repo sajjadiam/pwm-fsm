@@ -26,13 +26,14 @@ final/main.o: ..\Core\Src\main.c ..\Core\Inc\main.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_adc_ex.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_flash.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_flash_ex.h \
+  ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_iwdg.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pwr.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim_ex.h \
-  ..\Core\Inc\adc.h ..\Core\Inc\dma.h ..\Core\Inc\tim.h \
-  ..\Core\Inc\gpio.h C:\Keil_v5\ARM\ARMCLANG\include\string.h \
-  ..\Core\Inc\key.h ..\Core\Inc\pwm.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\math.h \
+  ..\Core\Inc\adc.h ..\Core\Inc\dma.h ..\Core\Inc\iwdg.h \
+  ..\Core\Inc\tim.h ..\Core\Inc\gpio.h \
+  C:\Keil_v5\ARM\ARMCLANG\include\string.h ..\Core\Inc\key.h \
+  ..\Core\Inc\pwm.h C:\Keil_v5\ARM\ARMCLANG\include\math.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\pwm_hal.h ..\Core\Inc\pwm_fsm.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h ..\Core\Inc\pwm_config.h \
   ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\adc_utils.h \

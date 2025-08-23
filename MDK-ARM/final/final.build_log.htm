@@ -27,11 +27,21 @@ Project File Date:  08/23/2025
 <h2>Output:</h2>
 *** Using Compiler 'V6.21', folder: 'C:\Keil_v5\ARM\ARMCLANG\Bin'
 Build target 'final'
+../Core/Src/main.c(23): warning: In file included from...
+../Core/Inc\iwdg.h(63): warning: function 'IWDG_Start_F1' has internal linkage but is not defined [-Wundefined-internal]
+   63 | static void IWDG_Start_F1(uint32_t timeout_ms, uint32_t f_lsi_hz /*~40000*/);
+      |             ^
+../Core/Src/main.c(135): note: used here
+  135 |         IWDG_Start_F1(1000 , 40000 );
+      |         ^
+1 warning generated.
 compiling main.c...
 linking...
-Program Size: Code=27222 RO-data=1306 RW-data=80 ZI-data=2456  
-FromELF: creating hex file...
-"final\final.axf" - 0 Error(s), 0 Warning(s).
+final\final.axf: Error: L6218E: Undefined symbol IWDG_Start_F1 (referred from main.o).
+Not enough information to list image symbols.
+Not enough information to list load addresses in the image map.
+Finished: 2 information, 0 warning and 1 error messages.
+"final\final.axf" - 1 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -55,7 +65,8 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@5.6.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:01
+Target not created.
+Build Time Elapsed:  00:00:00
 </pre>
 </body>
 </html>

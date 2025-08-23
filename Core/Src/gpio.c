@@ -55,7 +55,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, DIGIT4_Pin|DIGIT3_Pin|DIGIT2_Pin|DIGIT1_Pin
-                          |FAN1_Pin|FAN2_Pin, GPIO_PIN_RESET);
+                          |FAN1_Pin|INPUT_CONTROLL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SEGMENT_G_Pin|SEGMENT_DP_Pin|SEGMENT_A_Pin|SEGMENT_B_Pin
@@ -69,16 +69,16 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(RELAY_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DIGIT4_Pin DIGIT3_Pin DIGIT2_Pin DIGIT1_Pin
-                           FAN1_Pin FAN2_Pin */
+                           FAN1_Pin INPUT_CONTROLL_Pin */
   GPIO_InitStruct.Pin = DIGIT4_Pin|DIGIT3_Pin|DIGIT2_Pin|DIGIT1_Pin
-                          |FAN1_Pin|FAN2_Pin;
+                          |FAN1_Pin|INPUT_CONTROLL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PWM_SS_Pin SCREEN_C_Pin */
-  GPIO_InitStruct.Pin = PWM_SS_Pin|SCREEN_C_Pin;
+  /*Configure GPIO pins : PWM_SS_Pin SCREEN_C_Pin ss_CONTROLL_Pin */
+  GPIO_InitStruct.Pin = PWM_SS_Pin|SCREEN_C_Pin|ss_CONTROLL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);

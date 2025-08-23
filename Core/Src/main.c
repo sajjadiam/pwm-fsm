@@ -77,11 +77,15 @@ static FLAG sevenSegUpdateFlag = false;
 FLAG flag1 = false;
 FLAG flag2 = false;
 FLAG flag3 = false;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+void System_PowerOn(void);
+void EarlySafeIO(void);
+void Clock_Init(void);
 //-----------------------------pwm function prototype start--------------------------
 void PWM_Command_Key_init(volatile KeyPinConfig* key);
 /* USER CODE END PFP */
@@ -217,6 +221,32 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+//----------------------system power on----------------------------
+void System_PowerOn(void){
+  EarlySafeIO();         // 0
+//  Clock_Init();          // 1
+//  BOR_Enable();          // 1
+//  reset_flags_t rf = ResetCause_ReadAndClear(); // 1
+//  WDT_Hold(); Delay_ms(15);                     // 2
+//  Drivers_Power(false);  // 3
+
+//  if(!PWM_FSM_Init())   return Fault_Hard(E101);
+//  if(!SevenSeg_Init(&h7seg)) return Fault_Hard(E102);
+//  if(!PWM_Command_Key_init(&keys[PWM_COMMMAND_KEY])) return Fault_Hard(E103);
+
+//  SevenSeg_Print4("INIT"); Delay_ms(200);
+//  SevenSeg_Dim(2);       // نور کم در استندبای
+
+//  WDT_Start(); FSM_Goto(STANDBY);
+}
+void EarlySafeIO(void){
+	HAL_PWM_Stop();
+	HAL_PWM_TIMER_Disable();
+	Mechnical_Part_Init(mechParts ,MECHANICAL_PARTS_END);
+}
+void Clock_Init(void){
+	
+}
 //---------------------key functions start-----------------------------------------
 
 //void pwmStartStopKeyCallback(PWM_State_t* pwm ){

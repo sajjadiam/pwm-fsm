@@ -178,16 +178,16 @@ bool Action_EnterInit(void){
 		//error
 		return false;
 	}
+	if(!manual_ADC_Enable()){
+		return false;
+	}//ok
 	if(!Enable_ProtectionInterrupts()){	//ok
 		//error
 		return false;
 	}
-	if(!manual_ADC_Enable()){
-		return false;
-	}//ok
 	adc_dma_done = false;
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
-	HAL_TIM_Base_Start_IT(&htim2);
+	HAL_TIM_Base_Start_IT(&htim2); // جاش ا
 	return true;
 }
 bool Action_EnterSoftStart(void){

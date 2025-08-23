@@ -75,10 +75,12 @@ void Error_Handler(void);
 #define SEGMENT_G_GPIO_Port GPIOB
 #define SEGMENT_DP_Pin GPIO_PIN_11
 #define SEGMENT_DP_GPIO_Port GPIOB
+#define ss_CONTROLL_Pin GPIO_PIN_15
+#define ss_CONTROLL_GPIO_Port GPIOB
 #define FAN1_Pin GPIO_PIN_12
 #define FAN1_GPIO_Port GPIOA
-#define FAN2_Pin GPIO_PIN_15
-#define FAN2_GPIO_Port GPIOA
+#define INPUT_CONTROLL_Pin GPIO_PIN_15
+#define INPUT_CONTROLL_GPIO_Port GPIOA
 #define SEGMENT_A_Pin GPIO_PIN_4
 #define SEGMENT_A_GPIO_Port GPIOB
 #define SEGMENT_B_Pin GPIO_PIN_5

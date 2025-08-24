@@ -32,7 +32,7 @@ final/adc_utils.o: ..\Core\Src\adc_utils.c ..\Core\Inc\adc_utils.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim_ex.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h \
   ..\Core\Inc\adc_utils_config.h C:\Keil_v5\ARM\ARMCLANG\include\math.h \
-  ..\Core\Inc\pwm.h ..\Drivers\STM32F1xx_HAL_Driver\Inc\pwm_hal.h \
-  ..\Core\Inc\pwm_fsm.h ..\Core\Inc\pwm_config.h \
-  ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\time.h ..\Core\Inc\adc.h \
-  ..\Core\Inc\main.h
+  C:\Keil_v5\ARM\ARMCLANG\include\string.h ..\Core\Inc\pwm.h \
+  ..\Drivers\STM32F1xx_HAL_Driver\Inc\pwm_hal.h ..\Core\Inc\pwm_fsm.h \
+  ..\Core\Inc\pwm_config.h ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\time.h \
+  ..\Core\Inc\adc.h ..\Core\Inc\main.h

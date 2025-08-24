@@ -21,38 +21,7 @@
 #include "iwdg.h"
 
 /* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-IWDG_HandleTypeDef hiwdg;
-
-/* IWDG init function */
-void MX_IWDG_Init(void)
-{
-
-  /* USER CODE BEGIN IWDG_Init 0 */
-
-  /* USER CODE END IWDG_Init 0 */
-
-  /* USER CODE BEGIN IWDG_Init 1 */
-
-  /* USER CODE END IWDG_Init 1 */
-  hiwdg.Instance = IWDG;
-  hiwdg.Init.Prescaler = IWDG_PRESCALER_64;
-  hiwdg.Init.Reload = 1024;
-  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN IWDG_Init 2 */
-
-  /* USER CODE END IWDG_Init 2 */
-
-}
-
-/* USER CODE BEGIN 1 */
-
-static void IWDG_Start_F1(uint32_t timeout_ms, uint32_t f_lsi_hz /*~40000*/){
+void IWDG_Start_F1(uint32_t timeout_ms, uint32_t f_lsi_hz){
   uint32_t presc = IWDG_PRESCALER_64;
   uint32_t reload = ((timeout_ms * f_lsi_hz) / (1000UL * 64UL)) - 1UL;
   if (reload > 4095UL){
@@ -74,7 +43,38 @@ static void IWDG_Start_F1(uint32_t timeout_ms, uint32_t f_lsi_hz /*~40000*/){
   HAL_IWDG_Init(&hiwdg);        // همینجا IWDG شروع به کار می‌کند
 }
 
-static inline void IWDG_Kick(void){
+inline void IWDG_Kick(void){
   HAL_IWDG_Refresh(&hiwdg);
 }
+/* USER CODE END 0 */
+
+IWDG_HandleTypeDef hiwdg;
+
+/* IWDG init function */
+void MX_IWDG_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG_Init 0 */
+
+  /* USER CODE END IWDG_Init 0 */
+
+  /* USER CODE BEGIN IWDG_Init 1 */
+
+  /* USER CODE END IWDG_Init 1 */
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_64;
+  hiwdg.Init.Reload = 625-1;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG_Init 2 */
+
+  /* USER CODE END IWDG_Init 2 */
+
+}
+
+/* USER CODE BEGIN 1 */
+
+
 /* USER CODE END 1 */

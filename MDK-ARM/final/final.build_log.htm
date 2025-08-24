@@ -27,21 +27,264 @@ Project File Date:  08/23/2025
 <h2>Output:</h2>
 *** Using Compiler 'V6.21', folder: 'C:\Keil_v5\ARM\ARMCLANG\Bin'
 Build target 'final'
-../Core/Src/main.c(23): warning: In file included from...
-../Core/Inc\iwdg.h(63): warning: function 'IWDG_Start_F1' has internal linkage but is not defined [-Wundefined-internal]
-   63 | static void IWDG_Start_F1(uint32_t timeout_ms, uint32_t f_lsi_hz /*~40000*/);
-      |             ^
-../Core/Src/main.c(135): note: used here
-  135 |         IWDG_Start_F1(1000 , 40000 );
-      |         ^
+compiling gpio.c...
+compiling dma.c...
+compiling stm32f1xx_hal_gpio_ex.c...
+compiling stm32f1xx_hal_msp.c...
+compiling adc.c...
+compiling iwdg.c...
+compiling pwm_hal.c...
+compiling tim.c...
+compiling stm32f1xx_it.c...
+../Core/Src/main.c(31): warning: In file included from...
+../Core/Inc\pwm.h(16): warning: redefinition of typedef 'Counter' is a C11 feature [-Wtypedef-redefinition]
+   16 | typedef uint16_t Counter;
+      |                  ^
+../Core/Inc/adc_utils.h(23): note: previous definition is here
+   23 | typedef uint16_t Counter;
+      |                  ^
 1 warning generated.
 compiling main.c...
-linking...
-final\final.axf: Error: L6218E: Undefined symbol IWDG_Start_F1 (referred from main.o).
-Not enough information to list image symbols.
-Not enough information to list load addresses in the image map.
-Finished: 2 information, 0 warning and 1 error messages.
-"final\final.axf" - 1 Error(s), 1 Warning(s).
+compiling stm32f1xx_hal_adc.c...
+compiling stm32f1xx_hal.c...
+compiling stm32f1xx_hal_rcc_ex.c...
+compiling stm32f1xx_hal_gpio.c...
+compiling stm32f1xx_hal_pwr.c...
+compiling stm32f1xx_hal_cortex.c...
+compiling stm32f1xx_hal_dma.c...
+compiling stm32f1xx_hal_rcc.c...
+compiling stm32f1xx_hal_adc_ex.c...
+compiling stm32f1xx_hal_flash.c...
+compiling stm32f1xx_hal_iwdg.c...
+compiling stm32f1xx_hal_exti.c...
+compiling stm32f1xx_hal_flash_ex.c...
+compiling system_stm32f1xx.c...
+compiling key.c...
+compiling pwm_deadtime.c...
+compiling sevenseg.c...
+../Core/Src/value_to_string.c(3): warning: In file included from...
+../Core/Inc\pwm.h(16): warning: redefinition of typedef 'Counter' is a C11 feature [-Wtypedef-redefinition]
+   16 | typedef uint16_t Counter;
+      |                  ^
+../Core/Inc/adc_utils.h(23): note: previous definition is here
+   23 | typedef uint16_t Counter;
+      |                  ^
+1 warning generated.
+compiling value_to_string.c...
+../Core/Src/pwm.c(1): warning: In file included from...
+../Core/Inc\pwm.h(16): warning: redefinition of typedef 'Counter' is a C11 feature [-Wtypedef-redefinition]
+   16 | typedef uint16_t Counter;
+      |                  ^
+../Core/Inc/adc_utils.h(23): note: previous definition is here
+   23 | typedef uint16_t Counter;
+      |                  ^
+../Core/Src/pwm.c(91): error: too few arguments to function call, single argument 'ctx' was not specified
+   91 |                 if(!manual_ADC_Enable()){
+      |                     ~~~~~~~~~~~~~~~~~ ^
+../Core/Inc/adc_utils.h(62): note: 'manual_ADC_Enable' declared here
+   62 | bool manual_ADC_Enable  (ADC_Context* ctx);
+      |      ^                   ~~~~~~~~~~~~~~~~
+../Core/Src/pwm.c(121): error: use of undeclared identifier 'dmaSampleReady'
+  121 |         if(dmaSampleReady == false){
+      |            ^
+../Core/Src/pwm.c(124): error: use of undeclared identifier 'currentSampleReady'
+  124 |         if(currentSampleReady == false){
+      |            ^
+../Core/Src/pwm.c(127): error: use of undeclared identifier 'currentSampleReady'
+  127 |         else if(currentSampleReady == true && dmaSampleReady == true){
+      |                 ^
+../Core/Src/pwm.c(127): error: use of undeclared identifier 'dmaSampleReady'
+  127 |         else if(currentSampleReady == true && dmaSampleReady == true){
+      |                                               ^
+../Core/Src/pwm.c(129): error: use of undeclared identifier 'currentSampleReady'
+  129 |                 currentSampleReady = false;
+      |                 ^
+../Core/Src/pwm.c(130): error: use of undeclared identifier 'dmaSampleReady'
+  130 |                 dmaSampleReady = false;
+      |                 ^
+../Core/Src/pwm.c(136): error: use of undeclared identifier 'voltageSample'
+  136 |                 sampleSum += voltageSample[i];
+      |                              ^
+../Core/Src/pwm.c(138): error: use of undeclared identifier 'dmaSampleMean'
+  138 |         dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |         ^
+../Core/Src/pwm.c(138): error: use of undeclared identifier 'ADC_IDX_VBUS'
+  138 |         dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |                       ^
+../Core/Src/pwm.c(142): error: use of undeclared identifier 'temp1Sample'
+  142 |                 sampleSum += temp1Sample[i];
+      |                              ^
+../Core/Src/pwm.c(144): error: use of undeclared identifier 'dmaSampleMean'
+  144 |         dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |         ^
+../Core/Src/pwm.c(144): error: use of undeclared identifier 'ADC_IDX_TEMP_CH1'
+  144 |         dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |                       ^
+../Core/Src/pwm.c(148): error: use of undeclared identifier 'temp2Sample'
+  148 |                 sampleSum += temp2Sample[i];
+      |                              ^
+../Core/Src/pwm.c(150): error: use of undeclared identifier 'dmaSampleMean'
+  150 |         dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |         ^
+../Core/Src/pwm.c(150): error: use of undeclared identifier 'ADC_IDX_TEMP_CH2'
+  150 |         dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |                       ^
+../Core/Src/pwm.c(153): error: use of undeclared identifier 'currentSample'; did you mean 'IC_getSample'?
+  153 |                 sampleSum += currentSample[i];
+      |                              ^~~~~~~~~~~~~
+      |                              IC_getSample
+../Core/Inc\pwm.h(71): note: 'IC_getSample' declared here
+   71 | void IC_getSample(IC_Handler *cu ,uint16_t len);
+      |      ^
+../Core/Src/pwm.c(153): error: subscript of pointer to function type 'void (IC_Handler *, uint16_t)' (aka 'void (IC_Handler *, unsigned short)')
+  153 |                 sampleSum += currentSample[i];
+      |                              ^~~~~~~~~~~~~
+../Core/Src/pwm.c(155): error: use of undeclared identifier 'currentSmpleMean'
+  155 |         currentSmpleMean = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |         ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+1 warning and 20 errors generated.
+compiling pwm.c...
+compiling mechanical_part.c...
+compiling stm32f1xx_hal_tim_ex.c...
+../Core/Src/adc_utils.c(4): warning: In file included from...
+../Core/Inc\pwm.h(16): warning: redefinition of typedef 'Counter' is a C11 feature [-Wtypedef-redefinition]
+   16 | typedef uint16_t Counter;
+      |                  ^
+../Core/Inc\adc_utils.h(23): note: previous definition is here
+   23 | typedef uint16_t Counter;
+      |                  ^
+../Core/Src/adc_utils.c(51): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   51 |         [CC_GetTrig]                                    =       ADC_GetTrig                     ,
+      |                                                                 ^~~~~~~~~~~
+../Core/Src/adc_utils.c(52): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   52 |         [CC_SetTrig]                                    =       ADC_SetTrig                     ,
+      |                                                                 ^~~~~~~~~~~
+../Core/Src/adc_utils.c(53): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   53 |         [CC_Start]                                              =       ADC_Start                               ,
+      |                                                                         ^~~~~~~~~
+../Core/Src/adc_utils.c(54): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   54 |         [CC_Sampling]                                   = ADC_Sampling          ,
+      |                                                           ^~~~~~~~~~~~
+../Core/Src/adc_utils.c(55): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   55 |         [CC_Processing]                         = ADC_Processing        ,
+      |                                                   ^~~~~~~~~~~~~~
+../Core/Src/adc_utils.c(56): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   56 |         [CC_Measuringccuracy] = ADC_Measuringccuracy    ,
+      |                                 ^~~~~~~~~~~~~~~~~~~~
+../Core/Src/adc_utils.c(57): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   57 |         [CC_ResetTrig]                          = ADC_ResetTrig         ,
+      |                                                   ^~~~~~~~~~~~~
+../Core/Src/adc_utils.c(58): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   58 |         [CC_Finishing]                          = ADC_Finishing         ,
+      |                                                   ^~~~~~~~~~~~~
+../Core/Src/adc_utils.c(59): error: incompatible function pointer types initializing 'adc_funk' (aka 'void (*)(ADC_Context *)') with an expression of type 'void (void)' [-Wincompatible-function-pointer-types]
+   59 |         [CC_SetAWD]                                             = ADC_SetAWD                    ,
+      |                                                                   ^~~~~~~~~~
+../Core/Src/adc_utils.c(68): error: incompatible pointer to integer conversion assigning to 'uint16_t' (aka 'unsigned short') from 'uint16_t[3]' (aka 'unsigned short[3]') [-Wint-conversion]
+   68 |                                 samples[i][ctx->dmaSampleCounter] = ctx->dma_buffer;
+      |                                                                   ^ ~~~~~~~~~~~~~~~
+../Core/Src/adc_utils.c(98): error: use of undeclared identifier 'dmaSampleMean'
+   98 |         float voltage = ADC_to_voltage(dmaSampleMean[ADC_IDX_VBUS]);
+      |                                        ^
+../Core/Src/adc_utils.c(98): error: use of undeclared identifier 'ADC_IDX_VBUS'
+   98 |         float voltage = ADC_to_voltage(dmaSampleMean[ADC_IDX_VBUS]);
+      |                                                      ^
+../Core/Src/adc_utils.c(121): error: use of undeclared identifier 'dmaSampleMean'
+  121 |         float temperture1 = ADC_to_temperture(dmaSampleMean[ADC_IDX_TEMP_CH1]);
+      |                                               ^
+../Core/Src/adc_utils.c(121): error: use of undeclared identifier 'ADC_IDX_TEMP_CH1'
+  121 |         float temperture1 = ADC_to_temperture(dmaSampleMean[ADC_IDX_TEMP_CH1]);
+      |                                                             ^
+../Core/Src/adc_utils.c(122): error: use of undeclared identifier 'dmaSampleMean'
+  122 |         float temperture2 = ADC_to_temperture(dmaSampleMean[ADC_IDX_TEMP_CH2]);
+      |                                               ^
+../Core/Src/adc_utils.c(122): error: use of undeclared identifier 'ADC_IDX_TEMP_CH2'
+  122 |         float temperture2 = ADC_to_temperture(dmaSampleMean[ADC_IDX_TEMP_CH2]);
+      |                                                             ^
+../Core/Src/adc_utils.c(130): error: use of undeclared identifier 'currentOffset'
+  130 |                 uint16_t adcRealVal = (adc - currentOffset + 0.5f);
+      |                                              ^
+../Core/Src/adc_utils.c(166): error: too few arguments to function call, expected 1, have 0
+  166 |         calibrateCurrentOffset_machine[calibrateMode]();
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^
+../Core/Src/adc_utils.c(167): error: use of undeclared identifier 'ADC_Current_Calibrate_Mode_Finishing'
+  167 |         if(calibrateMode == ADC_Current_Calibrate_Mode_Finishing){
+      |                             ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+1 warning and 20 errors generated.
+compiling adc_utils.c...
+../Core/Src/pwm_fsm.c(2): warning: In file included from...
+../Core/Inc\pwm.h(16): warning: redefinition of typedef 'Counter' is a C11 feature [-Wtypedef-redefinition]
+   16 | typedef uint16_t Counter;
+      |                  ^
+../Core/Inc/adc_utils.h(23): note: previous definition is here
+   23 | typedef uint16_t Counter;
+      |                  ^
+../Core/Src/pwm_fsm.c(181): error: too few arguments to function call, single argument 'ctx' was not specified
+  181 |         if(!manual_ADC_Enable()){
+      |             ~~~~~~~~~~~~~~~~~ ^
+../Core/Inc/adc_utils.h(62): note: 'manual_ADC_Enable' declared here
+   62 | bool manual_ADC_Enable  (ADC_Context* ctx);
+      |      ^                   ~~~~~~~~~~~~~~~~
+../Core/Src/pwm_fsm.c(188): error: use of undeclared identifier 'adc_dma_done'
+  188 |         adc_dma_done = false;
+      |         ^
+../Core/Src/pwm_fsm.c(362): error: use of undeclared identifier 'dmaSampleReady'
+  362 |         if(dmaSampleReady == false){
+      |            ^
+../Core/Src/pwm_fsm.c(370): error: use of undeclared identifier 'dmaSampleReady'
+  370 |         dmaSampleReady = false;
+      |         ^
+../Core/Src/pwm_fsm.c(376): error: use of undeclared identifier 'voltageSample'
+  376 |                 sampleSum += voltageSample[i];
+      |                              ^
+../Core/Src/pwm_fsm.c(378): error: use of undeclared identifier 'dmaSampleMean'
+  378 |         dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |         ^
+../Core/Src/pwm_fsm.c(378): error: use of undeclared identifier 'ADC_IDX_VBUS'
+  378 |         dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |                       ^
+../Core/Src/pwm_fsm.c(381): error: use of undeclared identifier 'temp1Sample'
+  381 |                 sampleSum += temp1Sample[i];
+      |                              ^
+../Core/Src/pwm_fsm.c(383): error: use of undeclared identifier 'dmaSampleMean'
+  383 |         dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |         ^
+../Core/Src/pwm_fsm.c(383): error: use of undeclared identifier 'ADC_IDX_TEMP_CH1'
+  383 |         dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |                       ^
+../Core/Src/pwm_fsm.c(386): error: use of undeclared identifier 'temp2Sample'
+  386 |                 sampleSum += temp2Sample[i];
+      |                              ^
+../Core/Src/pwm_fsm.c(388): error: use of undeclared identifier 'dmaSampleMean'
+  388 |         dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |         ^
+../Core/Src/pwm_fsm.c(388): error: use of undeclared identifier 'ADC_IDX_TEMP_CH2'
+  388 |         dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
+      |                       ^
+../Core/Src/pwm_fsm.c(413): error: too few arguments to function call, single argument 'ctx' was not specified
+  413 |         manual_ADC_Disable();
+      |         ~~~~~~~~~~~~~~~~~~ ^
+../Core/Inc/adc_utils.h(63): note: 'manual_ADC_Disable' declared here
+   63 | bool manual_ADC_Disable (ADC_Context* ctx);
+      |      ^                   ~~~~~~~~~~~~~~~~
+../Core/Src/pwm_fsm.c(427): error: use of undeclared identifier 'currentSampleReady'
+  427 |         if(currentSampleReady == false){
+      |            ^
+../Core/Src/pwm_fsm.c(431): error: use of undeclared identifier 'dmaSampleReady'
+  431 |         if(dmaSampleReady == false){
+      |            ^
+../Core/Src/pwm_fsm.c(434): error: use of undeclared identifier 'currentSampleReady'
+  434 |         if(captureHndler[IC_CH3].ready && captureHndler[IC_CH4].ready && currentSampleReady == true && dmaSampleReady == true){
+      |                                                                          ^
+../Core/Src/pwm_fsm.c(434): error: use of undeclared identifier 'dmaSampleReady'
+  434 |         if(captureHndler[IC_CH3].ready && captureHndler[IC_CH4].ready && currentSampleReady == true && dmaSampleReady == true){
+      |                                                                                                        ^
+1 warning and 18 errors generated.
+compiling pwm_fsm.c...
+compiling stm32f1xx_hal_tim.c...
+"final\final.axf" - 56 Error(s), 5 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -66,7 +309,7 @@ Package Vendor: Keil
    * Component: ARM::CMSIS:CORE@5.6.0
       Include file:  CMSIS/Core/Include/tz_context.h
 Target not created.
-Build Time Elapsed:  00:00:00
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>

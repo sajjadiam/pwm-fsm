@@ -19,41 +19,53 @@ static inline float ADCcounts_to_CurrentA(uint16_t counts) {
 static inline float ADCcounts_to_VoltageV(uint16_t counts) {
 	return (counts * V_REF * VOLTAGE_GAIN) / ADC_MAX;
 }
+//typedefs
+typedef uint16_t Counter;
+typedef struct{
+	uint16_t dma_buffer[DMA_Index_End];
+	//samples
+	uint16_t currentSample[SAMPLE_NUM_MAX];
+	uint16_t voltageSample[SAMPLE_NUM_MAX];
+	uint16_t temp1Sample[SAMPLE_NUM_MAX];
+	uint16_t temp2Sample[SAMPLE_NUM_MAX];
+	//mean of samples
+	uint16_t sampleMean[ADC_Channel_End];
+	//Offsets
+	uint16_t currentOffset;
+	//counters
+	Counter currentSampleCounter;
+	Counter dmaSampleCounter;
+	//flags
+	struct{
+		volatile uint8_t dmaSampleReady			:1;
+		volatile uint8_t currentSampleReady	:1;
+	};
+}ADC_Context;
+typedef enum {
+	CC_GetTrig	= 0,
+	CC_SetTrig,
+	CC_Start,
+	CC_Sampling,
+	CC_Processing,
+	CC_Measuringccuracy,
+	CC_ResetTrig,
+	CC_Finishing,
+	CC_SetAWD,
+	CC_End,
+}CurrentCalibrateSub;
+typedef void (*adc_funk)(ADC_Context* ctx);
+
+//extern variables
+extern ADC_Context adcCtx;
+//functions
+void ADC_Context_init		(ADC_Context* ctx);
+bool manual_ADC_Enable	(ADC_Context* ctx);
+bool manual_ADC_Disable	(ADC_Context* ctx);
 
 //----------------------------------
-typedef void (*adc_funk)(void);
-typedef enum {
-	ADC_Current_Calibrate_Mode_GetTrig	= 0,
-	ADC_Current_Calibrate_Mode_SetTrig,
-	ADC_Current_Calibrate_Mode_Start,
-	ADC_Current_Calibrate_Mode_Sampling,
-	ADC_Current_Calibrate_Mode_Processing,
-	ADC_Current_Calibrate_Mode_Measuringccuracy,
-	ADC_Current_Calibrate_Mode_ResetTrig,
-	ADC_Current_Calibrate_Mode_Finishing,
-	ADC_Current_Calibrate_Mode_SetAWD,
-	ADC_Current_Calibrate_Mode_End,
-}ADC_Current_Calibrate_Mode;
-//----------------------------------
-extern uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
-extern uint16_t voltageSample[SAMPLE_NUM_MAX];
-extern uint16_t temp1Sample[SAMPLE_NUM_MAX];
-extern uint16_t temp2Sample[SAMPLE_NUM_MAX];
-extern uint16_t dmaSampleMean[ADC_DMA_CHANNEL_COUNT];
-extern volatile bool adc_dma_done;
-extern volatile bool adc_inject_done;
-extern volatile bool dmaSampleReady;
-extern volatile bool currentSampleReady;
-extern uint32_t InjectTrigger;
-extern uint16_t currentSample[SAMPLE_NUM_MAX];
-extern uint16_t currentSampleCounter;
-extern uint16_t dmaSampleCounter;
-extern uint16_t currentOffset;
-extern adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End];
-extern ADC_Current_Calibrate_Mode calibrateMode;
-extern uint16_t currentSmpleMean;
-bool manual_ADC_Enable(void);
-bool manual_ADC_Disable(void);
+
+
+
 bool DC_Voltage_Safety_Checker(void);
 bool Temperture_Safety_Checker(void);
 float ADC_to_voltage(uint16_t adc);

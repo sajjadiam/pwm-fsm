@@ -1,49 +1,83 @@
 #include "adc_utils.h"
 #include <math.h>
+#include <string.h>
 #include "pwm.h"
 #include "adc.h"
 
-volatile bool adc_dma_done = false;
-volatile bool adc_inject_done = false;
-volatile bool dmaSampleReady = false;
-volatile bool currentSampleReady = false;
-uint16_t adc_dma_buffer[ADC_DMA_CHANNEL_COUNT];
-uint16_t dmaSampleMean[ADC_DMA_CHANNEL_COUNT];
 uint32_t InjectTrigger = 0;											//Inject mode Trigger buffer
-uint16_t currentSample[SAMPLE_NUM_MAX] = {0};				//adc sample buffer
-uint16_t currentSmpleMean = 0;
-uint16_t voltageSample[SAMPLE_NUM_MAX] = {0};
-uint16_t temp1Sample[SAMPLE_NUM_MAX] = {0};
-uint16_t temp2Sample[SAMPLE_NUM_MAX] = {0};
-uint16_t currentSampleCounter = 0;							//counter of sample number
-uint16_t currentOffset = 0; 										//ADC no-load value or ADC offset
-uint16_t dmaSampleCounter = 0;
-ADC_Current_Calibrate_Mode calibrateMode = ADC_Current_Calibrate_Mode_GetTrig; //clibrate mode handler
-adc_funk calibrateCurrentOffset_machine[ADC_Current_Calibrate_Mode_End] = {
-	[ADC_Current_Calibrate_Mode_GetTrig]					=	ADC_GetTrig			,
-	[ADC_Current_Calibrate_Mode_SetTrig]					=	ADC_SetTrig			,
-	[ADC_Current_Calibrate_Mode_Start]						=	ADC_Start				,
-	[ADC_Current_Calibrate_Mode_Sampling] 				= ADC_Sampling		,
-	[ADC_Current_Calibrate_Mode_Processing] 			= ADC_Processing	,
-	[ADC_Current_Calibrate_Mode_Measuringccuracy] = ADC_Measuringccuracy	,
-	[ADC_Current_Calibrate_Mode_ResetTrig]				= ADC_ResetTrig		,
-	[ADC_Current_Calibrate_Mode_Finishing]				= ADC_Finishing		,
-	[ADC_Current_Calibrate_Mode_SetAWD]						= ADC_SetAWD			,
+
+
+void ADC_Context_init(ADC_Context* ctx){
+	memset(ctx->dma_buffer 		, 0 , sizeof(ctx->dma_buffer)		);
+	memset(ctx->currentSample	, 0 , sizeof(ctx->currentSample));
+	memset(ctx->voltageSample , 0 , sizeof(ctx->voltageSample));
+	memset(ctx->temp1Sample 	, 0 , sizeof(ctx->temp1Sample)	);
+	memset(ctx->temp2Sample 	, 0 , sizeof(ctx->temp2Sample)	);
+	memset(ctx->sampleMean 		, 0 , sizeof(ctx->sampleMean)		);
+	ctx->currentOffset 				= 0;
+	ctx->currentSampleCounter = 0;
+	ctx->dmaSampleCounter			= 0;
+	ctx->dmaSampleReady				= 0;
+	ctx->currentSampleReady		= 0;
+}
+bool manual_ADC_Enable(ADC_Context* ctx) {
+	if(HAL_ADCEx_Calibration_Start(ADC_UNIT) != HAL_OK){
+		return false;
+	}
+	if(HAL_ADC_Start_DMA(ADC_UNIT, (uint32_t*)ctx->dma_buffer, DMA_Index_End) != HAL_OK) {
+		HAL_ADC_Stop_DMA(ADC_UNIT);
+		return false;
+	}
+	if (HAL_ADCEx_InjectedStart_IT(ADC_UNIT) != HAL_OK) {
+		HAL_ADCEx_InjectedStop_IT(ADC_UNIT);
+		HAL_ADC_Stop_DMA(ADC_UNIT);
+		return false;
+	}
+	return true;
+}
+bool manual_ADC_Disable(ADC_Context* ctx){
+	// Stop DMA
+	if (HAL_ADC_Stop_DMA(ADC_UNIT) != HAL_OK){
+		return false;
+	}
+	// Stop Injected Conversion interrupts
+	if (HAL_ADCEx_InjectedStop_IT(ADC_UNIT) != HAL_OK){
+		return false;
+	}
+	return true;
+}
+CurrentCalibrateSub calibrateMode = CC_GetTrig; //clibrate mode handler
+adc_funk calibrateCurrentOffset_machine[CC_End] = {
+	[CC_GetTrig]					=	ADC_GetTrig			,
+	[CC_SetTrig]					=	ADC_SetTrig			,
+	[CC_Start]						=	ADC_Start				,
+	[CC_Sampling]					= ADC_Sampling		,
+	[CC_Processing]				= ADC_Processing	,
+	[CC_Measuringccuracy] = ADC_Measuringccuracy	,
+	[CC_ResetTrig]				= ADC_ResetTrig		,
+	[CC_Finishing]				= ADC_Finishing		,
+	[CC_SetAWD]						= ADC_SetAWD			,
 };
 // ISR callback
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-	if (hadc->Instance == hadc1.Instance) {
-		if(dmaSampleCounter < SampleNum[pwmState.currentState]){
-			adc_dma_done = true;
+	if (hadc->Instance == hadc1.Instance){
+		ADC_Context* ctx = &adcCtx;
+		uint16_t* samples[] = {ctx->voltageSample, ctx->temp1Sample, ctx->temp2Sample};
+		if(ctx->dmaSampleCounter < SAMPLE_NUM){
+			for(DMA_Index i = DMA_Index_Vbus ;i < DMA_Index_End;i++){
+				samples[i][ctx->dmaSampleCounter] = ctx->dma_buffer;
+			}
+			ctx->dmaSampleCounter++;
 		}
 	}
 }
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance == ADC1) {
-		if(currentSampleCounter < SampleNum[pwmState.currentState]){
-			adc_inject_done = true;
+		ADC_Context* ctx = &adcCtx;
+		if(ctx->currentSampleCounter < SAMPLE_NUM){
+			ctx->currentSample[ctx->currentSampleCounter] = HAL_ADCEx_InjectedGetValue(ADC_UNIT, ADC_INJECTED_RANK_1);
+			ctx->currentSampleCounter++;
 		}
-		/* تبدیل مقدار خام به جریان و ذخیره در متغیر یا ساختار دلخواه */
 	}
 }
 
@@ -59,32 +93,7 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc){
 
 // 3) ترکیب برای manual read once
 
-bool manual_ADC_Enable(void) {
-	if(HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK){
-		return false;
-	}
-	if(HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, ADC_DMA_CHANNEL_COUNT) != HAL_OK) {
-		HAL_ADC_Stop_DMA(&hadc1);
-		return false;
-	}
-	if (HAL_ADCEx_InjectedStart_IT(&hadc1) != HAL_OK) {
-		HAL_ADCEx_InjectedStop_IT(&hadc1);
-		HAL_ADC_Stop_DMA(&hadc1);
-		return false;
-	}
-	return true;
-}
-bool manual_ADC_Disable(void){
-	// Stop DMA
-	if (HAL_ADC_Stop_DMA(&hadc1) != HAL_OK){
-		return false;
-	}
-	// Stop Injected Conversion interrupts
-	if (HAL_ADCEx_InjectedStop_IT(&hadc1) != HAL_OK){
-		return false;
-	}
-	return true;
-}
+
 bool DC_Voltage_Safety_Checker(void){
 	float voltage = ADC_to_voltage(dmaSampleMean[ADC_IDX_VBUS]);
 	if(voltage < 250 || voltage > 345){

@@ -60,8 +60,8 @@ static inline ResetFlag_t Read_Reset_Cause_F1(void){
 void MX_IWDG_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-static void IWDG_Start_F1(uint32_t timeout_ms, uint32_t f_lsi_hz /*~40000*/);
-static inline void IWDG_Kick(void);
+void IWDG_Start_F1(uint32_t timeout_ms, uint32_t f_lsi_hz);
+inline void IWDG_Kick(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

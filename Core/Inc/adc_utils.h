@@ -1,13 +1,11 @@
 #ifndef __ADC_UTILS_H__
 #define __ADC_UTILS_H__
 
-
+//includes
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_adc.h"
 #include <stdbool.h>
 #include "adc_utils_config.h"
-//includes
-
 //inline func
 static inline uint16_t CurrentA_to_ADCcounts(float I_amp) {
 	if(V_REF == 0){
@@ -61,18 +59,11 @@ typedef enum {
 	CC_End,
 }CurrentCalibrateSub;
 typedef void (*adc_funk)(ADC_Context* ctx);
-
-//extern variables
-//extern ADC_Context adcCtx;
 //functions
 void ADC_Context_init		(ADC_Context* ctx);
 bool manual_ADC_Enable	(ADC_Context* ctx);
 bool manual_ADC_Disable	(ADC_Context* ctx);
-
 //----------------------------------
-
-
-
 bool DC_Voltage_Safety_Checker(ADC_Context* ctx);
 bool Temperture_Safety_Checker(ADC_Context* ctx);
 //-----------------------------------------

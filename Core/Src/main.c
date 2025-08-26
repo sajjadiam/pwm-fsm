@@ -63,7 +63,7 @@
 SevenSeg_HandleTypeDef h7seg;
 char buffer[6] = "     ";
 PWM_Event_t evt;
-/*const State_Machine_Func stateFunc[PwmStateEND] = {
+const State_Machine_Func stateFunc[PwmStateEND] = {
 	[PwmStateStandby]        	=	stateStandby ,																																	
 	[PwmStateInit]           	=	stateInit ,																																	
 	[PwmStateSoftStart]      	=	stateSoftStart ,
@@ -72,7 +72,7 @@ PWM_Event_t evt;
 	[PwmStateRecovery]        = stateRecovery ,
 	[PwmStateSoftStop]       	= stateSoftStop ,
 	[PwmStateHardStop]				= stateHardStop
-};*/
+};
 static Counter keyCounter =0;
 static Counter sevenSegCounter =0;
 
@@ -118,7 +118,11 @@ int main(void)
   MX_TIM2_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
+	app.counterTimer = &htim2;
 	FSM_Tick_Attach(&app);
+	ADC_AttachContext(&app.adc);
+	IC_AttachContext(&app.ic);
+	PWM_AttachContext(&app.pwm);
 	
 	ResetFlag_t rf = Read_Reset_Cause_F1();
 	PWM_FSM_Init(&app);                         // ماشین حالت PWM را در حالت STANDBY قرار می‌دهد
@@ -138,18 +142,18 @@ int main(void)
 	while (1)
   {
 		
-		/*if(hardFaultFlag){
-			hardFaultFlag = false;
-			PWM_FSM_HandleEvent(Evt_HardwareFault);
-		}*/
-		/*else{
-			while(DequeueEvent(&evt)){
-				PWM_FSM_HandleEvent(evt);
+		if(app.flags.hardFault){
+			app.flags.hardFault = false;
+			PWM_FSM_HandleEvent(&app,Evt_HardwareFault);
+		}
+		else{
+			while(DequeueEvent(&app,&evt)){
+				PWM_FSM_HandleEvent(&app,evt);
 			}
-		}*/
+		}
 		if(app.flags.tick){
 			app.flags.tick = 0;
-			//stateFunc[app.pwm.currentState]();
+			stateFunc[app.pwm.currentState](&app);
 		}
 		if(app.flags.segUpdate){
 			app.flags.segUpdate = 0;

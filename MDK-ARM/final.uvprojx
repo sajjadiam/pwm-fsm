@@ -681,6 +681,26 @@
               <FileType>1</FileType>
               <FilePath>..\Core\Src\mechanical_part.c</FilePath>
             </File>
+            <File>
+              <FileName>fsm_init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\fsm_init.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_soft_start.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\fsm_soft_start.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_resonance_sweep.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\fsm_resonance_sweep.c</FilePath>
+            </File>
+            <File>
+              <FileName>input_capture_utils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\input_capture_utils.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

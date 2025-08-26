@@ -13,7 +13,6 @@
 //defines
 
 //typedefs
-typedef uint16_t Counter;
 typedef bool FLAG;
 typedef enum{
 	ERROR_CODE_None												= 0,
@@ -49,27 +48,7 @@ typedef enum{
 	ERROR_CODE_PwmStateHardStop, 
 	ERROR_CODE_End,
 }ERROR_CODE;
-typedef enum{
-	IC_CH3	= 0,
-	IC_CH4,
-	IC_END,
-}IC_CH;
-typedef struct{
-	TIM_HandleTypeDef 	*htim;
-	uint32_t						ch;
-	uint32_t 						buff[SAMPLE_NUM_MAX];
-	volatile uint16_t 	count;
-	volatile uint16_t		avg;
-	struct{
-		volatile 					uint8_t armed		:1;
-		volatile 					uint8_t ready		:1;
-	};
-}IC_Handler;
-extern IC_Handler captureHndler[IC_END];
-void captureUnitInit(IC_Handler *cu ,TIM_HandleTypeDef *htim ,uint32_t channel);
-void IC_Init(void);
-void IC_getSample(IC_Handler *cu ,uint16_t len);
-void IC_processSample(IC_Handler *cu ,uint16_t len);
+
 typedef struct{												// flags of pwm
 	uint32_t freqRampDone 	: 1;
 	uint32_t freqLock				: 1;

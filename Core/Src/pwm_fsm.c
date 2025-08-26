@@ -4,36 +4,22 @@
 #include "key.h"
 #include "mechanical_part.h"
 #include "adc.h"
+//----------------
+#include "adc_utils.h"
+#include "input_capture_utils.h"
+#include "fsm_init.h"
+#include "fsm_soft_start.h"
+#include "fsm_resonance_sweep.h"
+
 volatile bool stateMachineFlag = false;
-volatile Init_MODE initMode = Init_MODE_DMA_Sampling;
-volatile SOFT_START_MODE softStartMode = SOFT_START_MODE_setFrequencyRamp;
-volatile ResonanceSweepSub resonanceSweepMode = RS_sampling;
+ADC_Context adcCtx;
+
 EventQueue_t eventQueue;	
 KeyPinConfig keys[END_KEY];
 ERROR_CODE errorCode = ERROR_CODE_None;
-const State_Machine_Func initMachine[Init_MODE_END] = {
-	[Init_MODE_DMA_Sampling]				=	DMA_Sampling,
-	[Init_MODE_DMA_Processing]			= DMA_Processing,
-	[Init_MODE_safatyCheck]					= safatyCheck,
-	[Init_MODE_calibratingCurrent]	= calibratingCurrent,
-	[Init_MODE_adcDisable]					= adcDisable,
-	[Init_MODE_Finishing]						= initFinishing,
-};
-const State_Machine_Func softStartMachine[SOFT_START_MODE_END] = {
-	[SOFT_START_MODE_setFrequencyRamp]	= softStart_set_freq_ramp,
-	[SOFT_START_MODE_sampling]					= softStart_sampling,
-	[SOFT_START_MODE_processing]				= softStart_Processing,
-	[SOFT_START_MODE_safatyCheck]				= safatyCheck,
-	[SOFT_START_MODE_tunPower]					= softStart_tun_power,
-	[SOFT_START_MODE_Finishing]					= softStart_finishing,
-};
-const State_Machine_Func resonanceSweepMachine[RS_END] = {
-	[RS_sampling]				= resonanceSweep_sampling,
-	[RS_processing]			= resonanceSweep_processing,
-	[RS_safatyCheck]		= resonanceSweep_safatyCheck,
-	[RS_settingChanges]	= resonanceSweep_settingChanges,
-	[RS_Finishing]			= resonanceSweep_Finishing,
-};
+
+
+
 const StateTransition_t transitions[TRANSITION_NUM] ={
 	// ====== STANDBY ======
 	{PwmStateStandby, 				Evt_StartCommand,      			Action_EnterInit,         PwmStateInit						},	// 1
@@ -82,16 +68,7 @@ const uint32_t stateTimingTable_us[PwmStateEND] = {
 	[PwmStateSoftStop]       	= 50000,		//
 	[PwmStateHardStop]				= 50000			//
 };
-const uint8_t SampleNum[PwmStateEND] = {
-	[PwmStateStandby]        	= 20,   	
-	[PwmStateInit]           	= 20,   
-	[PwmStateSoftStart]      	= 5,		
-	[PwmStateResonanceSweep]	= 5,		
-	[PwmStateRunning]        	= 5,
-	[PwmStateRecovery]        = 5,
-	[PwmStateSoftStop]       	= 0,
-	[PwmStateHardStop]				= 0	
-};
+
 
 PWM_State_Machine PWM_FSM_GetCurrentState(void){
 	return pwmState.currentState;
@@ -126,6 +103,7 @@ bool PWM_FSM_HandleEvent(PWM_Event_t event){;
 }
 //-----------------------------------------------------------
 void PWM_FSM_Init(void){
+	ADC_Context_init(&adcCtx);
 	// 1) مقداردهی اولیه‌ی state
 	pwmState.currentState = PwmStateStandby;
 	// 2) پاک‌سازی فلگ‌های داخلی FSM
@@ -178,14 +156,13 @@ bool Action_EnterInit(void){
 		//error
 		return false;
 	}
-	if(!manual_ADC_Enable()){
+	if(!manual_ADC_Enable(&adcCtx)){
 		return false;
 	}//ok
 	if(!Enable_ProtectionInterrupts()){	//ok
 		//error
 		return false;
 	}
-	adc_dma_done = false;
 	__HAL_TIM_SET_COUNTER(&htim2, 0);
 	HAL_TIM_Base_Start_IT(&htim2); // جاش ا
 	return true;
@@ -266,8 +243,11 @@ void stateInit(void){
 }
 void stateSoftStart(void){
 	softStartMachine[softStartMode]();
+	EnqueueEvent(Evt_SoftStartDone);
 }
 void stateResonanceSweep(void){
+	resonanceSweepMachine[resonanceSweepMode]();
+	EnqueueEvent(Evt_ResonanceFound);
 	/*if(!captureReadyCh3 || !captureReadyCh4){
 		return;
 	}
@@ -357,69 +337,11 @@ void stateSoftStop_keyCallback(void){
 void stateHardStop_keyCallback(void){
 	//do nothing
 }
-//init state machine function
-void DMA_Sampling				(void){
-	if(dmaSampleReady == false){
-		DMA_GET_SAMPLE();
-		return;
-	}
-	if(HAL_ADC_Stop_DMA(ADC_UNIT) != HAL_OK){
-		return;
-	}
-	initMode = Init_MODE_DMA_Processing;
-	dmaSampleReady = false;
-	return;
-}
-void DMA_Processing			(void){
-	uint32_t sampleSum = 0;
-	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
-		sampleSum += voltageSample[i];
-	}
-	dmaSampleMean[ADC_IDX_VBUS] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
-	sampleSum = 0;
-	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
-		sampleSum += temp1Sample[i];
-	}
-	dmaSampleMean[ADC_IDX_TEMP_CH1] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
-	sampleSum = 0;
-	for(uint16_t i = 0;i < SampleNum[pwmState.currentState];i++){
-		sampleSum += temp2Sample[i];
-	}
-	dmaSampleMean[ADC_IDX_TEMP_CH2] = (uint16_t)((sampleSum / SampleNum[pwmState.currentState]) + 0.5f);
-	initMode = Init_MODE_safatyCheck;
-	return;
-}
-void safatyCheck				(void){
-	if(!DC_Voltage_Safety_Checker()){
-		//error
-		return;
-	}
-	if(!Temperture_Safety_Checker()){
-		//error
-		return;
-	}
-	initMode = Init_MODE_calibratingCurrent;
-	return;
-}
-void calibratingCurrent	(void){
-	if(!ADC_currentChannelCalibrate()){
-		//error
-		return;
-	}
-	initMode = Init_MODE_adcDisable;
-	return;
-}
-void adcDisable					(void){
-	manual_ADC_Disable();
-	initMode = Init_MODE_Finishing;
-	return;
-}
-void initFinishing			(void){
-	//do noting
-}
+
 //soft start state machine function
 
 //Resonance Sweep state machine function
+/*
 void resonanceSweep_sampling			(void){
 	//get input cpture sample for voltage and current signal of induction furnace
 	
@@ -450,7 +372,7 @@ void resonanceSweep_settingChanges(void){
 }
 void resonanceSweep_Finishing			(void){
 	EnqueueEvent(Evt_ResonanceFound);
-}
+}*/
 //Running state machine function
 
 //Recovery state machine function

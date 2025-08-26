@@ -1,7 +1,6 @@
-final/pwm_fsm.o: ..\Core\Src\pwm_fsm.c ..\Core\Inc\pwm_fsm.h \
+final/input_capture_utils.o: ..\Core\Src\input_capture_utils.c \
+  ..\Core\Inc\input_capture_utils.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h ..\Core\Inc\pwm.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\math.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h \
   ..\Core\Inc\stm32f1xx_hal_conf.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc.h \
@@ -32,10 +31,5 @@ final/pwm_fsm.o: ..\Core\Src\pwm_fsm.c ..\Core\Inc\pwm_fsm.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pwr.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim_ex.h \
-  ..\Drivers\STM32F1xx_HAL_Driver\Inc\pwm_hal.h ..\Core\Inc\pwm_config.h \
-  ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\adc_utils.h \
-  ..\Core\Inc\adc_utils_config.h ..\Core\Inc\time.h ..\Core\Inc\tim.h \
-  ..\Core\Inc\main.h ..\Core\Inc\key.h ..\Core\Inc\mechanical_part.h \
-  ..\Core\Inc\adc.h ..\Core\Inc\input_capture_utils.h \
-  ..\Core\Inc\fsm_init.h ..\Core\Inc\fsm_soft_start.h \
-  ..\Core\Inc\fsm_resonance_sweep.h
+  ..\Core\Inc\tim.h ..\Core\Inc\main.h \
+  C:\Keil_v5\ARM\ARMCLANG\include\string.h

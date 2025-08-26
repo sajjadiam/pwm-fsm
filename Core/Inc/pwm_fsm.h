@@ -89,40 +89,13 @@ bool PWM_FSM_HandleEvent(PWM_Event_t event); //ok
 
 PWM_State_Machine PWM_FSM_GetCurrentState(void); //ok
 //-----------------------------------------------------
-typedef enum{
-	Init_MODE_DMA_Sampling			= 0,
-	Init_MODE_DMA_Processing,
-	Init_MODE_safatyCheck,
-	Init_MODE_calibratingCurrent,
-	Init_MODE_adcDisable,
-	Init_MODE_Finishing,
-	Init_MODE_END,
-}Init_MODE;
-extern volatile Init_MODE initMode;
-//-------------------------------------------
-typedef enum{
-	SOFT_START_MODE_setFrequencyRamp		= 0,
-	SOFT_START_MODE_sampling,
-	SOFT_START_MODE_processing,
-	SOFT_START_MODE_safatyCheck,
-	SOFT_START_MODE_tunPower,
-	SOFT_START_MODE_Finishing,
-	SOFT_START_MODE_END,
-}SOFT_START_MODE;
 
-extern volatile SOFT_START_MODE softStartMode;
+
+//-------------------------------------------
+
 
 //----------------------------------
-typedef enum{
-	RS_sampling		= 0,
-	RS_processing,
-	RS_safatyCheck,
-	RS_settingChanges,
-	RS_Finishing,
-	RS_END,
-}ResonanceSweepSub;
 
-extern volatile ResonanceSweepSub resonanceSweepMode;
 
 //----------------------------------------
 bool Action_None(void);                // هیچ کاری انجام نمی‌ده (برای ترنزیشن‌های منطقی بدون عملیات)
@@ -151,7 +124,6 @@ void stateHardStop(void);
 void reset_fsm_control_flags(void);
 extern const StateTransition_t pwmFsmTable[TRANSITION_NUM];
 extern const uint32_t stateTimingTable_us[PwmStateEND];
-extern const uint8_t SampleNum[PwmStateEND];
 //-----------------------------------------------------------
 bool EnqueueEvent(PWM_Event_t evt);
 bool DequeueEvent(PWM_Event_t* evt);
@@ -167,10 +139,5 @@ void stateRunning_keyCallback				(void);
 void stateRecovery_keyCallback			(void);
 void stateSoftStop_keyCallback			(void);
 void stateHardStop_keyCallback			(void);
-//------------------------------------
-void resonanceSweep_sampling			(void);
-void resonanceSweep_processing		(void);
-void resonanceSweep_safatyCheck		(void);
-void resonanceSweep_settingChanges(void);
-void resonanceSweep_Finishing			(void);
+
 #endif // __PWM_FSM_H__

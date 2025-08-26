@@ -2,6 +2,7 @@
 #define __ADC_UTILS_CONFIG__
 
 
+
 //VOLTAGE GAIN		
 #define VOLTAGE_GAIN							122 // Practical measured value
 //NTC conversion		
@@ -22,6 +23,7 @@
 #define G_ISO          						4U
 #define G_TOTAL          					(G_AMP * G_ISO)
 #define NOISE_THRESHOLD_LSB   		3U
+#define OC_HYSTERESIS							20
 //typedefs
 typedef enum{
 	DMA_Index_Vbus	= 0,

@@ -1,21 +1,11 @@
 #include "pwm_fsm.h"
-#include "pwm.h"
-#include "tim.h"
-#include "key.h"
-#include "mechanical_part.h"
-#include "adc.h"
-//----------------
-#include "adc_utils.h"
-#include "input_capture_utils.h"
+#include "app_ctx.h"          // حالا اینجا تعریف کامل AppContext را داریم
 #include "fsm_init.h"
 #include "fsm_soft_start.h"
 #include "fsm_resonance_sweep.h"
 
-volatile bool stateMachineFlag = false;
-ADC_Context adcCtx;
 
-EventQueue_t eventQueue;	
-KeyPinConfig keys[END_KEY];
+//static AppContext app_ctx;
 ERROR_CODE errorCode = ERROR_CODE_None;
 
 
@@ -70,27 +60,20 @@ const uint32_t stateTimingTable_us[PwmStateEND] = {
 };
 
 
-PWM_State_Machine PWM_FSM_GetCurrentState(void){
-	return pwmState.currentState;
-}
-void EventQueue_Clear(void){
-	eventQueue.head = 0;
-	eventQueue.tail = 0;
-}
-void reset_fsm_control_flags(void){
-	stateMachineFlag = false;
+PWM_State_Machine PWM_FSM_GetCurrentState(struct AppContext* app){
+	return app->pwm.currentState;
 }
 //--------------------main
-bool PWM_FSM_HandleEvent(PWM_Event_t event){;
+bool PWM_FSM_HandleEvent(struct AppContext* app, PWM_Event_t event){;
 	for (size_t i = 0; i < TRANSITION_NUM; i++){
 		const StateTransition_t* t = &transitions[i];
-		if (t->currentState == pwmState.currentState && t->event == event){
+		if (t->currentState == app->pwm.currentState && t->event == event){
 			bool ok = true;
 			if(t->action){
-				ok = t->action();
+				ok = t->action(app);
 				if(ok){
 					//action success(currentState, t->nextState, event);  // برای debug
-					pwmState.currentState = t->nextState;
+					app->pwm.currentState = t->nextState;
 				}
 				else{
 					errorCode = ERROR_CODE_Evt_Start + event;
@@ -102,48 +85,35 @@ bool PWM_FSM_HandleEvent(PWM_Event_t event){;
 	return false;
 }
 //-----------------------------------------------------------
-void PWM_FSM_Init(void){
-	ADC_Context_init(&adcCtx);
+void PWM_FSM_Init(struct AppContext* app ){
+	ADC_Context_init(&app->adc);
 	// 1) مقداردهی اولیه‌ی state
-	pwmState.currentState = PwmStateStandby;
+	app->pwm.currentState = PwmStateStandby;
 	// 2) پاک‌سازی فلگ‌های داخلی FSM
-	reset_fsm_control_flags();          // فقط فلگ‌ها
 	// اگر از event queue استفاده می‌کنی:
-	EventQueue_Clear();             // queue = empty
+	EventQueue_Clear(&app->queue);             // queue = empty
 	// 3) آماده‌سازی زیرساخت تریگر زمان FSM
 	//    این‌جا TIM2 را ری‌ست ولی نباید PWM/TIM1 را دست بزنی
-	__HAL_TIM_SET_COUNTER(&htim2, 0);
-	HAL_TIM_Base_Start_IT(&htim2);  // هر دوره یک update IRQ تولید می‌کند
+	__HAL_TIM_SET_COUNTER(app->counterTimer, 0);
+	HAL_TIM_Base_Start_IT(app->counterTimer);  // هر دوره یک update IRQ تولید می‌کند
 
 	// 4) ست کردن یک‌بار stateMachineFlag برای kickstart
-	stateMachineFlag = true;
-	fsm_tick_us = 0;
+	EventQueue_Clear(&app->queue);
+	app->fsm_tick_us = 0;
 }
 //---------------------------------------------------------------
-bool EnqueueEvent(PWM_Event_t evt){
-	uint8_t next = (eventQueue.head + 1) % EVENT_QUEUE_SIZE;
-	if (next == eventQueue.tail){
-		return false; // پر شده
-	}
-	eventQueue.queue[eventQueue.head] = evt;
-	eventQueue.head = next;
-	return true;
+bool EnqueueEvent(struct AppContext* app, PWM_Event_t evt){
+	return EnqueueEvent_ctx(&app->queue, evt);
 }
-
-bool DequeueEvent(PWM_Event_t* evt) {
-	if (eventQueue.head == eventQueue.tail){
-		return false; // خالی
-	}
-	*evt = eventQueue.queue[eventQueue.tail];
-	eventQueue.tail = (eventQueue.tail + 1) % EVENT_QUEUE_SIZE;
-	return true;
+bool DequeueEvent(struct AppContext* app, PWM_Event_t* evt) {
+	return DequeueEvent_ctx(&app->queue, evt);
 }
 //---------------------------------------
-bool Action_None(void){
+bool Action_None(struct AppContext* app){
 	return true;// nothing to do
 }
-bool Action_EnterInit(void){
-  reset_PWM_control_variables(); 	//ok
+bool Action_EnterInit(struct AppContext* app){
+  reset_PWM_control_variables(&app->pwm); 	//ok
   if(!clear_fault_flags()){				//ok
 		//error
 		return false;
@@ -156,18 +126,18 @@ bool Action_EnterInit(void){
 		//error
 		return false;
 	}
-	if(!manual_ADC_Enable(&adcCtx)){
+	if(!manual_ADC_Enable(&app->adc)){
 		return false;
 	}//ok
 	if(!Enable_ProtectionInterrupts()){	//ok
 		//error
 		return false;
 	}
-	__HAL_TIM_SET_COUNTER(&htim2, 0);
-	HAL_TIM_Base_Start_IT(&htim2); // جاش ا
+	__HAL_TIM_SET_COUNTER(app->counterTimer, 0);
+	HAL_TIM_Base_Start_IT(app->counterTimer); // جاش ا
 	return true;
 }
-bool Action_EnterSoftStart(void){
+bool Action_EnterSoftStart(struct AppContext* app){
 	if(!manual_Timers_Enable()){
 		//error code
 		return false;
@@ -186,68 +156,68 @@ bool Action_EnterSoftStart(void){
 		//error code
 		return false;
 	}
-	set_PWM_control_variables(&pwmState);
-	Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Fan1],POWER_MODE_ON);
-	Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Fan2],POWER_MODE_ON);
+	set_PWM_control_variables(&app->pwm);
+	//Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Fan1],POWER_MODE_ON);
+	//Mechnical_Part_Handler(&mechParts[MECHANICAL_PART_Fan2],POWER_MODE_ON);
 	return true;
 }
-bool Action_StartSweep(void){
-	IC_Init();
-	__HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_CC3 | TIM_FLAG_CC4 | TIM_FLAG_CC3OF | TIM_FLAG_CC4OF);
-	if(HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3) != HAL_OK){ //start input capture
+bool Action_StartSweep(struct AppContext* app){
+	IC_Init(&app->ic);
+	__HAL_TIM_CLEAR_FLAG(app->pwm.pwmTimer, TIM_FLAG_CC3 | TIM_FLAG_CC4 | TIM_FLAG_CC3OF | TIM_FLAG_CC4OF);
+	if(HAL_TIM_IC_Start_IT(app->pwm.pwmTimer, TIM_CHANNEL_3) != HAL_OK){ //start input capture
 		// error
 		return false;
 	}
-	if(HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4) != HAL_OK){ //start input capture
+	if(HAL_TIM_IC_Start_IT(app->pwm.pwmTimer, TIM_CHANNEL_4) != HAL_OK){ //start input capture
 		// error
 		return false;
 	}
 	return true;
 }
-bool Action_EnterRunning(void){
+bool Action_EnterRunning(struct AppContext* app){
 	return true;
 }
-bool Action_RecoveryMode(void){
+bool Action_RecoveryMode(struct AppContext* app){
 	return true;
 }
-bool Action_Tune(void){
+bool Action_Tune(struct AppContext* app){
 	return true;
 }
-bool Action_SoftStop(void){
+bool Action_SoftStop(struct AppContext* app){
 	return true;
 }
-bool Action_FailSoftStop(void){
+bool Action_FailSoftStop(struct AppContext* app){
 	return true;
 }
-bool Action_Shutdown(void){
+bool Action_Shutdown(struct AppContext* app){
 	return true;
 }
-bool Action_EnterStandby(void){
+bool Action_EnterStandby(struct AppContext* app){
 	
 	return true;
 }
-bool Action_SoftRestart(void){
+bool Action_SoftRestart(struct AppContext* app){
 	return true;
 }
-bool Action_ResetSystem(void){
+bool Action_ResetSystem(struct AppContext* app){
 	return true;
 }
 //-------------------------------------------state functions
-void stateStandby(void){
+void stateStandby(struct AppContext* app){
 	
 }
-void stateInit(void){
-	initMachine[initMode]();
-	EnqueueEvent(Evt_InitComplete);
+void stateInit(struct AppContext* app){
+	initMachine[initMode](app);
+	EnqueueEvent(app, Evt_InitComplete);
 	return;
 }
-void stateSoftStart(void){
-	softStartMachine[softStartMode]();
-	EnqueueEvent(Evt_SoftStartDone);
+void stateSoftStart(struct AppContext* app){
+	softStartMachine[softStartMode](app);
+	EnqueueEvent(app,Evt_SoftStartDone);
 }
-void stateResonanceSweep(void){
-	resonanceSweepMachine[resonanceSweepMode]();
-	EnqueueEvent(Evt_ResonanceFound);
+void stateResonanceSweep(struct AppContext* app){
+	resonanceSweepMachine[resonanceSweepMode](app);
+	EnqueueEvent(app,Evt_ResonanceFound);
 	/*if(!captureReadyCh3 || !captureReadyCh4){
 		return;
 	}
@@ -266,16 +236,16 @@ void stateResonanceSweep(void){
 	}
 	EnqueueEvent(Evt_ResonanceFound);*/
 }
-void stateRunning(void){
+void stateRunning(struct AppContext* app){
 	
 }
-void stateRecovery(void){
+void stateRecovery(struct AppContext* app){
 	
 }
-void stateSoftStop(void){
+void stateSoftStop(struct AppContext* app){
 	
 }
-void stateHardStop(void){
+void stateHardStop(struct AppContext* app){
 	
 }
 //-------------------------------------------------
@@ -289,52 +259,52 @@ const keyAction keyAct[PwmStateEND] = {
 	[PwmStateSoftStop]       	= stateSoftStop_keyCallback ,
 	[PwmStateHardStop]				= stateHardStop_keyCallback
 };
-void stateStandby_keyCallback(void){
-	Key_Read(&keys[PWM_COMMMAND_KEY],1);
-	if(keys[PWM_COMMMAND_KEY].state == KeyStatePressed){
-		keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
-		EnqueueEvent(Evt_StartCommand);
+void stateStandby_keyCallback(struct AppContext* app){
+	Key_Read(&app->keys[PWM_COMMMAND_KEY],1);
+	if(app->keys[PWM_COMMMAND_KEY].state == KeyStatePressed){
+		app->keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
+		EnqueueEvent(app, Evt_StartCommand);
 	}
 }
-void stateInit_keyCallback(void){
-	Key_Read(&keys[PWM_COMMMAND_KEY], 1);
-	if (keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
-		keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
-		EnqueueEvent(Evt_StopCommand);
+void stateInit_keyCallback(struct AppContext* app){
+	Key_Read(&app->keys[PWM_COMMMAND_KEY], 1);
+	if (app->keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
+		app->keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
+		EnqueueEvent(app, Evt_StopCommand);
 	}
 }
-void stateSoftStart_keyCallback(void){
-	Key_Read(&keys[PWM_COMMMAND_KEY], 1);
-	if (keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
-		keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
-		EnqueueEvent(Evt_StopCommand);
+void stateSoftStart_keyCallback(struct AppContext* app){
+	Key_Read(&app->keys[PWM_COMMMAND_KEY], 1);
+	if (app->keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
+		app->keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
+		EnqueueEvent(app, Evt_StartCommand);
 	}
 }
-void stateResonanceSweep_keyCallback(void){
-	Key_Read(&keys[PWM_COMMMAND_KEY], 1);
-	if (keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
-		keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
-		EnqueueEvent(Evt_StopCommand);
+void stateResonanceSweep_keyCallback(struct AppContext* app){
+	Key_Read(&app->keys[PWM_COMMMAND_KEY], 1);
+	if (app->keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
+		app->keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
+		EnqueueEvent(app, Evt_StartCommand);
 	}
 }
-void stateRunning_keyCallback(void){
-	Key_Read(&keys[PWM_COMMMAND_KEY], 1);
-	if (keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
-		keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
-		EnqueueEvent(Evt_StopCommand);
+void stateRunning_keyCallback(struct AppContext* app){
+	Key_Read(&app->keys[PWM_COMMMAND_KEY], 1);
+	if (app->keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
+		app->keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
+		EnqueueEvent(app, Evt_StartCommand);
 	}
 }
-void stateRecovery_keyCallback(void){
-	Key_Read(&keys[PWM_COMMMAND_KEY], 1);
-	if (keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
-		keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
-		EnqueueEvent(Evt_StopCommand);
+void stateRecovery_keyCallback(struct AppContext* app){
+	Key_Read(&app->keys[PWM_COMMMAND_KEY], 1);
+	if (app->keys[PWM_COMMMAND_KEY].state == KeyStatePressed) {
+		app->keys[PWM_COMMMAND_KEY].state = KeyStateOnNone;
+		EnqueueEvent(app, Evt_StartCommand);
 	}
 }
-void stateSoftStop_keyCallback(void){
+void stateSoftStop_keyCallback(struct AppContext* app){
 	//do nothing
 }
-void stateHardStop_keyCallback(void){
+void stateHardStop_keyCallback(struct AppContext* app){
 	//do nothing
 }
 

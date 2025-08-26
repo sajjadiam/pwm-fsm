@@ -701,6 +701,16 @@
               <FileType>1</FileType>
               <FilePath>..\Core\Src\input_capture_utils.c</FilePath>
             </File>
+            <File>
+              <FileName>fsm_tick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\fsm_tick.c</FilePath>
+            </File>
+            <File>
+              <FileName>event_queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\event_queue.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

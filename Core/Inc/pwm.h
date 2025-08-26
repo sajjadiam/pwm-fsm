@@ -3,17 +3,18 @@
 
 //includes
 #include <math.h>
+#include <stdbool.h>
 #include "stm32f1xx_hal.h"
 #include "pwm_hal.h"
-#include "pwm_fsm.h" // ساختار کلي ماشين حالت و ايونت هايي که بايد انجام بشن 
 #include "pwm_config.h"
 #include "pwm_deadtime.h"
-#include "adc_utils.h"
 #include "time.h"
+#include "pwm_fsm.h"
+
 //defines
 
 //typedefs
-typedef bool FLAG;
+
 typedef enum{
 	ERROR_CODE_None												= 0,
 	
@@ -55,34 +56,32 @@ typedef struct{												// flags of pwm
 }PWM_Flags;
 
 typedef struct{
-	PWM_State_Machine currentState;	// current state 
-	PWM_Flags					flags;
-	float 						heatSinkTemp;							// from average of 2 adc chanel
-	float 						voltage;									// from adc chanel
-	float 						current;									// from adc chanel
-	uint32_t 					currentFreq;						// from arr
-	uint32_t 					targetFreq;						// clculate from 2 chanel of input capture
-	uint16_t					targetPower;
-	uint16_t					currentPower;
-	uint8_t 					currentDeadTime;				// calculate from dtg register 
-	uint8_t 					targetDeadTime;					// calculate from power & temperture & frequency
-	ERROR_CODE 				errorCode;
-	TIME							time;
+	PWM_State_Machine 	currentState;	// current state 
+	PWM_Flags						flags;
+	TIM_HandleTypeDef*	pwmTimer;
+	float 							heatSinkTemp;							// from average of 2 adc chanel
+	float 							voltage;									// from adc chanel
+	float 							current;									// from adc chanel
+	uint32_t 						currentFreq;						// from arr
+	uint32_t 						targetFreq;						// clculate from 2 chanel of input capture
+	uint16_t						targetPower;
+	uint16_t						currentPower;
+	uint8_t 						currentDeadTime;				// calculate from dtg register 
+	uint8_t 						targetDeadTime;					// calculate from power & temperture & frequency
+	ERROR_CODE 					errorCode;
+	TIME								time;
 }PWM_State_t;
 
-extern PWM_State_t pwmState;
-extern uint32_t fsm_tick_us;
 //functions
-
-void Set_PWM_FrequencySmooth(PWM_State_t* pwmState);									//Change the frequency to the target frequency slowly
-void pwm_softStop(PWM_State_t* pwmState);
+void PWM_AttachContext(PWM_State_t* ctx);
+void Set_PWM_FrequencySmooth(PWM_State_t* s);									//Change the frequency to the target frequency slowly
 
 //------------------------------------
 
 bool manual_PWM_Disable(void);         
 bool manual_Timers_Reset(void);
-void reset_PWM_control_flags(void);
-bool reset_PWM_control_variables(void);
+void reset_PWM_control_flags(PWM_State_t* s);
+bool reset_PWM_control_variables(PWM_State_t* s);
 bool clear_fault_flags(void);
 bool Enable_ProtectionInterrupts(void);
 //----------------------------
@@ -95,7 +94,7 @@ void softStart_Processing(void);
 bool manual_Timers_Enable(void);
 bool set_PWM_frequency(uint16_t freq);
 bool manual_PWM_Enable(void);
-bool set_PWM_control_variables(PWM_State_t* pwmState);								//initial pwm structure
+bool set_PWM_control_variables(PWM_State_t* s);								//initial pwm structure
 //------------------------------------------------
 
 #endif//__PWM_H__

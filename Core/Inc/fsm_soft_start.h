@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+struct AppContext; // forward declaration
+
 typedef enum{
 	SS_setFrequencyRamp		= 0,
 	SS_sampling,
@@ -14,14 +16,14 @@ typedef enum{
 	SS_Finishing,
 	SS_END,
 }SoftStartSub;
-typedef void (*SM_SS_func)(void);
+typedef void (*SM_SS_func)(struct AppContext* app);
 
-void ss_set_freq_ramp	(void);
-void ss_sampling			(void);
-void ss_Processing		(void);
-void ss_safatyCheck		(void);
-void ss_tun_power			(void);
-void ss_finishing			(void);
+void ss_set_freq_ramp	(struct AppContext* app);
+void ss_sampling			(struct AppContext* app);
+void ss_Processing		(struct AppContext* app);
+void ss_safatyCheck		(struct AppContext* app);
+void ss_tun_power			(struct AppContext* app);
+void ss_finishing			(struct AppContext* app);
 
 extern volatile SoftStartSub softStartMode;
 extern const 		SM_SS_func softStartMachine[SS_END];

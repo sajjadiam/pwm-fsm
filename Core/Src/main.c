@@ -27,11 +27,13 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include "app_ctx.h"
 #include "key.h"
 #include "pwm.h"
 #include "sevenseg.h"
 #include "value_to_string.h"
 #include "mechanical_part.h"
+#include "fsm_tick.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +63,7 @@
 SevenSeg_HandleTypeDef h7seg;
 char buffer[6] = "     ";
 PWM_Event_t evt;
-const State_Machine_Func stateFunc[PwmStateEND] = {
+/*const State_Machine_Func stateFunc[PwmStateEND] = {
 	[PwmStateStandby]        	=	stateStandby ,																																	
 	[PwmStateInit]           	=	stateInit ,																																	
 	[PwmStateSoftStart]      	=	stateSoftStart ,
@@ -70,15 +72,9 @@ const State_Machine_Func stateFunc[PwmStateEND] = {
 	[PwmStateRecovery]        = stateRecovery ,
 	[PwmStateSoftStop]       	= stateSoftStop ,
 	[PwmStateHardStop]				= stateHardStop
-};
+};*/
 static Counter keyCounter =0;
 static Counter sevenSegCounter =0;
-static FLAG keyRead = false;
-static FLAG hardFaultFlag = false;
-static FLAG sevenSegUpdateFlag = false;
-FLAG flag1 = false;
-FLAG flag2 = false;
-FLAG flag3 = false;
 
 /* USER CODE END PV */
 
@@ -100,7 +96,7 @@ void PWM_Command_Key_init(volatile KeyPinConfig* key);
   */
 int main(void)
 {
-
+	AppContext app = {0};
   /* USER CODE BEGIN 1 */
   /* USER CODE END 1 */
 	/* MCU Configuration--------------------------------------------------------*/
@@ -122,10 +118,12 @@ int main(void)
   MX_TIM2_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
+	FSM_Tick_Attach(&app);
+	
 	ResetFlag_t rf = Read_Reset_Cause_F1();
-	PWM_FSM_Init();                         // ماشین حالت PWM را در حالت STANDBY قرار می‌دهد
+	PWM_FSM_Init(&app);                         // ماشین حالت PWM را در حالت STANDBY قرار می‌دهد
 	SevenSeg_Init(&h7seg);                  // راه‌اندازی ۷‑سگمنت، نور کم
-	PWM_Command_Key_init(&keys[PWM_COMMMAND_KEY]); // کلید فرمان Start با دیبانس داخلی
+	PWM_Command_Key_init(&app.keys[PWM_COMMMAND_KEY]); // کلید فرمان Start با دیبانس داخلی
 	IWDG_Start_F1(1000, 40000);
 	//Mechnical_Part_Init(mechParts,MECHANICAL_PARTS_END);
 	//PWM_FSM_Init();
@@ -140,28 +138,28 @@ int main(void)
 	while (1)
   {
 		
-		if(hardFaultFlag){
+		/*if(hardFaultFlag){
 			hardFaultFlag = false;
 			PWM_FSM_HandleEvent(Evt_HardwareFault);
-		}
-		else{
+		}*/
+		/*else{
 			while(DequeueEvent(&evt)){
 				PWM_FSM_HandleEvent(evt);
 			}
+		}*/
+		if(app.flags.tick){
+			app.flags.tick = 0;
+			//stateFunc[app.pwm.currentState]();
 		}
-		if(stateMachineFlag){
-			stateMachineFlag = false;
-			stateFunc[pwmState.currentState]();
-		}
-		if(sevenSegUpdateFlag){
-			sevenSegUpdateFlag = 0;
-			sevenSegmentModeHandler[segmentMode](buffer,&pwmState);
+		if(app.flags.segUpdate){
+			app.flags.segUpdate = 0;
+			sevenSegmentModeHandler[segmentMode](buffer,&app.pwm);
 			SevenSeg_BufferUpdate(&h7seg,buffer);
 			SevenSeg_Update(&h7seg);
 		}
-		if(keyRead){
-			keyRead = false;
-			keyAct[pwmState.currentState]();
+		if(app.flags.keyRead){
+			app.flags.keyRead = false;
+			keyAct[app.pwm.currentState](&app);
 		}
 	
     /* USER CODE END WHILE */
@@ -239,20 +237,8 @@ void PWM_Command_Key_init(volatile KeyPinConfig* key){
 //timers NVIC callback-----------------------------------------
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){ //1 us timer
 	if(htim->Instance == TIM2){
-		if(fsm_tick_us++ >= stateTimingTable_us[pwmState.currentState]){
-			fsm_tick_us = 0;
-			stateMachineFlag = true;
-		}
-		if(keyCounter++ >= KEY_READ_PERIOD){
-			keyCounter = 0;
-			keyRead = true;
-		}
-		if(sevenSegCounter++ >= SEVEN_SEGMENT_UPDATE_PERIOD){
-			sevenSegCounter = 0;
-			sevenSegUpdateFlag = true;
-		}
+		FSM_Tick_OnPeriodElapsed(htim);
 	}
-	
 }
 //timers NVIC callback
 //

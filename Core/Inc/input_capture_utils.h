@@ -26,11 +26,18 @@ typedef struct{
 		volatile 					uint8_t ready		:1;
 	};
 }IC_Handler;
-extern IC_Handler captureHndler[IC_END];
+
+typedef struct{
+	IC_Handler ch[IC_END];
+}IC_Context;
+
+void IC_AttachContext(IC_Context* ctx);
 void captureUnitInit(IC_Handler *cu ,TIM_HandleTypeDef *htim ,uint32_t channel);
-void IC_Init(void);
-void IC_getSample(IC_Handler *cu ,uint16_t len);
-void IC_processSample(IC_Handler *cu ,uint16_t len);
+void IC_Init(IC_Context* ctx);
+void IC_getSample(IC_Context* ctx ,uint16_t len);
+void IC_processSample(IC_Context* ctx ,uint16_t len);
+
+
 
 #ifdef __cplusplus
 }

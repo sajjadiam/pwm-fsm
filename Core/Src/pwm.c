@@ -1,10 +1,13 @@
-#include "pwm.h"
+#include "app_ctx.h"
 #include "tim.h"
 #include "adc.h"
 #include <string.h>
 
-uint32_t fsm_tick_us = 0;
-PWM_State_t pwmState;
+
+static PWM_State_t* s_ctx;
+void PWM_AttachContext(PWM_State_t* ctx){
+	s_ctx = ctx;
+}
 
 bool manual_PWM_Disable(void){
 	HAL_PWM_Stop(); // متوقف کردن خروجی PWM
@@ -22,23 +25,22 @@ bool manual_Timers_Reset(void){
 	HAL_PWM_TIMER_Disable();
 	return true;
 }
-void reset_PWM_control_flags(void){
-	pwmState.flags.freqLock = PWM_FALSE;
-	pwmState.flags.freqRampDone = PWM_FALSE;
+void reset_PWM_control_flags(PWM_State_t* s){
+	s->flags.freqLock = PWM_FALSE;
+	s->flags.freqRampDone = PWM_FALSE;
 }
-bool reset_PWM_control_variables(void){
+bool reset_PWM_control_variables(PWM_State_t* s){
+	reset_PWM_control_flags(s);
+	s->pwmTimer 				= &htim1;
+	s->heatSinkTemp 		= 0.0f;
+	s->voltage 					= 0.0f;
+	s->current 					= 0.0f;
 	
-	reset_PWM_control_flags();
-	
-	pwmState.heatSinkTemp 		= 0.0f;
-	pwmState.voltage 					= 0.0f;
-	pwmState.current 					= 0.0f;
-	
-	pwmState.currentFreq 			= 0;
-	pwmState.targetFreq 			= 0;
-	pwmState.currentDeadTime 	= 0;
-	pwmState.targetDeadTime 	= 0;
-	pwmState.targetPower			= 0;
+	s->currentFreq 			= 0;
+	s->targetFreq 			= 0;
+	s->currentDeadTime 	= 0;
+	s->targetDeadTime 	= 0;
+	s->targetPower			= 0;
 	return true;
 }
 bool clear_fault_flags(void){
@@ -73,25 +75,21 @@ bool manual_PWM_Enable(void){
 	HAL_PWM_Start();
 	return true;
 }
-bool set_PWM_control_variables(PWM_State_t* pwmState){
-	pwmState->currentFreq = PWM_SOFT_START_START_FREQ;//10kHz
-	pwmState->targetFreq = PWM_SOFT_START_END_FREQ;//20kHz
-	pwmState->currentDeadTime = PWM_START_DEAD_TIME; //14us
-	pwmState->targetDeadTime = PWM_END_DEAD_TIME;//7us
-	pwmState->targetPower = PWM_SOFT_START_UPPER_LIMIT_POWER;
-	pwmState->flags.freqRampDone = PWM_FALSE;
+bool set_PWM_control_variables(PWM_State_t* s){
+	s->currentFreq = PWM_SOFT_START_START_FREQ;//10kHz
+	s->targetFreq = PWM_SOFT_START_END_FREQ;//20kHz
+	s->currentDeadTime = PWM_START_DEAD_TIME; //14us
+	s->targetDeadTime = PWM_END_DEAD_TIME;//7us
+	s->targetPower = PWM_SOFT_START_UPPER_LIMIT_POWER;
+	s->flags.freqRampDone = PWM_FALSE;
 	return true;
 }
 //-----------------------------------------
-
-
-
-
-void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
+void Set_PWM_FrequencySmooth(PWM_State_t* s){
 	uint32_t arr =  HAL_PWM_GetARR();
-	uint32_t targetArr = (PWM_CLK_FREQ / (pwmState->targetFreq * 2)) - 1;
+	uint32_t targetArr = (PWM_CLK_FREQ / (s->targetFreq * 2)) - 1;
   uint32_t cmp;
-	if(pwmState->flags.freqLock){
+	if(s->flags.freqLock){
 		return;
 	}
 	else{
@@ -102,19 +100,17 @@ void Set_PWM_FrequencySmooth(PWM_State_t* pwmState){
 			arr -= PWM_SOFT_CHANGE_STEP;
 		}
 		else{
-			pwmState->flags.freqLock = 1;
+			s->flags.freqLock = 1;
 		}
-		if(!pwmState->flags.freqLock){
-			pwmState->currentFreq = PWM_CLK_FREQ / ((arr + 1) * 2);
+		if(!s->flags.freqLock){
+			s->currentFreq = PWM_CLK_FREQ / ((arr + 1) * 2);
 			cmp = (arr + 1) / 2;
 			HAL_PWM_SetARR(arr);
 			HAL_PWM_SetCompare(TIM_CHANNEL_1,cmp);
 			HAL_PWM_SetCompare(TIM_CHANNEL_2,cmp);
-			HAL_PWM_SetDeadTime(DT_ConvertNsToDTG(DT_FromFreq(pwmState->currentFreq)));
+			HAL_PWM_SetDeadTime(DT_ConvertNsToDTG(DT_FromFreq(s->currentFreq)));
 		}
 	}
 }
-//input capture
-//--------------------------
 
 //end of pwm.c

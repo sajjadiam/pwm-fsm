@@ -1,12 +1,23 @@
 #ifndef __PWM_FSM_H__
 #define __PWM_FSM_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
+#include "fsm_events.h"
 
-#define EVENT_QUEUE_SIZE 		10U
 #define TRANSITION_NUM			27U
 #define SAMPLE_NUM_RUNNING	5U
+	
+struct AppContext; // forward declaration
+
+/**
+ * @enum PWM_Event_t
+ * @brief Events that trigger transitions in the PWM FSM.
+ */
 typedef enum{
 	PwmStateStandby = 0,      	
 	PwmStateInit,             	
@@ -19,62 +30,7 @@ typedef enum{
 	PwmStateEND
 }PWM_State_Machine;
 
-typedef void (*State_Machine_Func)(void);
-/**
- * @enum PWM_Event_t
- * @brief Events that trigger transitions in the PWM FSM.
- */
-typedef enum{
-	Evt_None = 0,
-
-	// ---- دستورات کنترلی ----
-	Evt_StartCommand,
-	Evt_StopCommand,
-
-	// ---- اتمام مراحل ----
-	Evt_InitComplete,
-	Evt_SoftStartDone,
-	Evt_SoftStopDone,
-	Evt_ResonanceFound,
-
-	// ---- کنترل حلقه توان و رزونانس ----
-	Evt_TargetPowerReached,
-	Evt_ResonanceLost,
-
-	// ---- دستورات فرعی ----
-	Evt_TuningCommand,
-	Evt_TuningComplete,
-
-	// ---- خطاهای نرم قابل بازیابی ----
-	Evt_OverPowerDetected,
-	Evt_OverTempDetected,
-	Evt_UnderVoltageDetected,
-	Evt_OverCurrentDetected,
-
-	// ---- خطاهای سخت غیرقابل بازیابی ----
-	Evt_ShortCircuitDetected,
-	Evt_HardwareFault,
-	Evt_ArcDetected,
-	Evt_GridFaultDetected,
-	
-	// ---- سیستم ----
-	Evt_FaultCleared,
-	Evt_End
-}PWM_Event_t;
-
-
-
-typedef struct {
-    PWM_Event_t queue[EVENT_QUEUE_SIZE];
-    volatile uint8_t head;
-    volatile uint8_t tail;
-} EventQueue_t;
-
-extern EventQueue_t eventQueue;
-extern volatile bool stateMachineFlag;
-
-
-typedef bool (*ActionFunc)(void);
+typedef bool (*ActionFunc)(struct AppContext* app);
 
 typedef struct {
 	PWM_State_Machine currentState; /**< Current state */
@@ -83,61 +39,52 @@ typedef struct {
 	PWM_State_Machine nextState;   	/**< Next state */
 }StateTransition_t;
 
-void PWM_FSM_Init(void);			//ok
+void PWM_FSM_Init(struct AppContext* app);			//ok
+bool PWM_FSM_HandleEvent(struct AppContext* app, PWM_Event_t event); //ok
 
-bool PWM_FSM_HandleEvent(PWM_Event_t event); //ok
-
-PWM_State_Machine PWM_FSM_GetCurrentState(void); //ok
-//-----------------------------------------------------
-
-
-//-------------------------------------------
-
-
-//----------------------------------
-
-
+PWM_State_Machine PWM_FSM_GetCurrentState(struct AppContext* app); //ok
 //----------------------------------------
-bool Action_None(void);                // هیچ کاری انجام نمی‌ده (برای ترنزیشن‌های منطقی بدون عملیات)
-bool Action_EnterInit(void);               // مقداردهی اولیه سخت‌افزار و پارامترها
-bool Action_EnterSoftStart(void);     // شروع ramp-up اولیه PWM یا ولتاژ
-bool Action_StartSweep(void);  
-bool Action_EnterRunning(void);
-bool Action_RecoveryMode(void);
-bool Action_Tune(void);        
-bool Action_SoftStop(void);    
-bool Action_FailSoftStop(void);
-bool Action_Shutdown(void);    
-bool Action_EnterStandby(void);
-bool Action_SoftRestart(void); 
-bool Action_ResetSystem(void); 
+bool Action_None(struct AppContext* app);                // هیچ کاری انجام نمی‌ده (برای ترنزیشن‌های منطقی بدون عملیات)
+bool Action_EnterInit(struct AppContext* app);               // مقداردهی اولیه سخت‌افزار و پارامترها
+bool Action_EnterSoftStart(struct AppContext* app);     // شروع ramp-up اولیه PWM یا ولتاژ
+bool Action_StartSweep(struct AppContext* app);  
+bool Action_EnterRunning(struct AppContext* app);
+bool Action_RecoveryMode(struct AppContext* app);
+bool Action_Tune(struct AppContext* app);        
+bool Action_SoftStop(struct AppContext* app);    
+bool Action_FailSoftStop(struct AppContext* app);
+bool Action_Shutdown(struct AppContext* app);    
+bool Action_EnterStandby(struct AppContext* app);
+bool Action_SoftRestart(struct AppContext* app); 
+bool Action_ResetSystem(struct AppContext* app); 
 //-------------------------------
-void stateStandby(void);
-void stateInit(void);
-void stateSoftStart(void);
-void stateResonanceSweep(void);
-void stateRunning(void);
-void stateRecovery(void);
-void stateSoftStop(void);
-void stateHardStop(void);
+typedef void (*State_Machine_Func)(struct AppContext* app);
+void stateStandby(struct AppContext* app);
+void stateInit(struct AppContext* app);
+void stateSoftStart(struct AppContext* app);
+void stateResonanceSweep(struct AppContext* app);
+void stateRunning(struct AppContext* app);
+void stateRecovery(struct AppContext* app);
+void stateSoftStop(struct AppContext* app);
+void stateHardStop(struct AppContext* app);
 //----------------------------------------------
-void reset_fsm_control_flags(void);
 extern const StateTransition_t pwmFsmTable[TRANSITION_NUM];
-extern const uint32_t stateTimingTable_us[PwmStateEND];
+extern const uint32_t stateTimingTable_us[8];
 //-----------------------------------------------------------
-bool EnqueueEvent(PWM_Event_t evt);
-bool DequeueEvent(PWM_Event_t* evt);
-void EventQueue_Clear(void); 
+bool EnqueueEvent(struct AppContext* app ,PWM_Event_t evt);
+bool DequeueEvent(struct AppContext* app ,PWM_Event_t* evt);
 //---------------------------------------------
-typedef void (*keyAction)(void);
-extern const keyAction keyAct[PwmStateEND];
-void stateStandby_keyCallback				(void);
-void stateInit_keyCallback					(void);
-void stateSoftStart_keyCallback			(void);
-void stateResonanceSweep_keyCallback(void);
-void stateRunning_keyCallback				(void);
-void stateRecovery_keyCallback			(void);
-void stateSoftStop_keyCallback			(void);
-void stateHardStop_keyCallback			(void);
-
+typedef void (*keyAction)(struct AppContext* app);
+extern const keyAction keyAct[8];
+void stateStandby_keyCallback				(struct AppContext* app);
+void stateInit_keyCallback					(struct AppContext* app);
+void stateSoftStart_keyCallback			(struct AppContext* app);
+void stateResonanceSweep_keyCallback(struct AppContext* app);
+void stateRunning_keyCallback				(struct AppContext* app);
+void stateRecovery_keyCallback			(struct AppContext* app);
+void stateSoftStop_keyCallback			(struct AppContext* app);
+void stateHardStop_keyCallback			(struct AppContext* app);
+#ifdef __cplusplus
+}
+#endif
 #endif // __PWM_FSM_H__

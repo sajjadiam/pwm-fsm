@@ -4,7 +4,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	
+
+struct AppContext;
 typedef enum{
 	RS_sampling		= 0,
 	RS_processing,
@@ -13,16 +14,16 @@ typedef enum{
 	RS_Finishing,
 	RS_END,
 }ResonanceSweepSub;
-typedef void (*SM_RS_func)(void);
+typedef void (*SM_RS_func)(struct AppContext* app);
 
 extern volatile ResonanceSweepSub resonanceSweepMode;
 extern const SM_RS_func resonanceSweepMachine[RS_END];
 
-void resonanceSweep_sampling			(void);
-void resonanceSweep_processing		(void);
-void resonanceSweep_safatyCheck		(void);
-void resonanceSweep_settingChanges(void);
-void resonanceSweep_Finishing			(void);
+void resonanceSweep_sampling			(struct AppContext* app);
+void resonanceSweep_processing		(struct AppContext* app);
+void resonanceSweep_safatyCheck		(struct AppContext* app);
+void resonanceSweep_settingChanges(struct AppContext* app);
+void resonanceSweep_Finishing			(struct AppContext* app);
 
 #ifdef __cplusplus
 }

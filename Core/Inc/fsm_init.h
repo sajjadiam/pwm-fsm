@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+struct AppContext; // forward declaration
+
 typedef enum{
 	Init_DMA_Sampling			= 0,
 	Init_DMA_Processing,
@@ -15,14 +17,14 @@ typedef enum{
 	Init_END,
 }InitSub;
 
-typedef void (*SM_Init_func)(void);
+typedef void (*SM_Init_func)(struct AppContext* app);
 
-void init_DMA_Sampling			(void);
-void init_DMA_Processing		(void);
-void init_safatyCheck				(void);
-void init_calibratingCurrent(void);
-void init_adcDisable				(void);
-//void init_Finishing					(void);
+void init_DMA_Sampling			(struct AppContext* app);
+void init_DMA_Processing		(struct AppContext* app);
+void init_safatyCheck				(struct AppContext* app);
+void init_calibratingCurrent(struct AppContext* app);
+void init_adcDisable				(struct AppContext* app);
+//void init_Finishing					(struct AppContext* app);
 
 extern const 		SM_Init_func initMachine[Init_END];
 extern volatile InitSub initMode;

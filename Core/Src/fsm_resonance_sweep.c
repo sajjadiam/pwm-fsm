@@ -1,6 +1,7 @@
 #include "fsm_resonance_sweep.h"
-#include "adc_utils.h"
-#include "input_capture_utils.h"
+#include "app_ctx.h"
+
+
 
 volatile ResonanceSweepSub resonanceSweepMode = RS_sampling;
 const SM_RS_func resonanceSweepMachine[RS_END] = {
@@ -11,24 +12,24 @@ const SM_RS_func resonanceSweepMachine[RS_END] = {
 	[RS_Finishing]			= resonanceSweep_Finishing,
 };
 
-void resonanceSweep_sampling			(void){
-	ADC_Context* ctx = &adcCtx;
+void resonanceSweep_sampling			(struct AppContext* app){
+	ADC_Context* ctx = &app->adc;
 	DMA_Sampling(ctx);
 	INJECT_Sampling(ctx);
-	if(captureHndler[IC_CH3].ready && captureHndler[IC_CH4].ready && ctx->dmaSampleReady && ctx->currentSampleReady){
+	if(app->ic.ch[IC_CH3].ready && app->ic.ch[IC_CH4].ready && ctx->dmaSampleReady && ctx->currentSampleReady){
 		resonanceSweepMode = RS_processing;
 	}
 }
-void resonanceSweep_processing		(void){
+void resonanceSweep_processing		(struct AppContext* app){
 	
 }
-void resonanceSweep_safatyCheck		(void){
+void resonanceSweep_safatyCheck		(struct AppContext* app){
 	
 }
-void resonanceSweep_settingChanges(void){
+void resonanceSweep_settingChanges(struct AppContext* app){
 	
 }
-void resonanceSweep_Finishing			(void){
+void resonanceSweep_Finishing			(struct AppContext* app){
 	
 }
 //end of fsm_resonance_sweep.h

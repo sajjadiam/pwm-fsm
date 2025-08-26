@@ -38,6 +38,8 @@
 "final\fsm_soft_start.o"
 "final\fsm_resonance_sweep.o"
 "final\input_capture_utils.o"
+"final\fsm_tick.o"
+"final\event_queue.o"
 --strict --scatter "final\final.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

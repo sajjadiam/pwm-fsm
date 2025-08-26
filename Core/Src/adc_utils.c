@@ -1,10 +1,14 @@
-#include "adc_utils.h"
+#include "app_ctx.h"
 #include <math.h>
 #include <string.h>
 #include "adc.h"
 
 uint32_t InjectTrigger = 0;											//Inject mode Trigger buffer
+static ADC_Context* s_ctx;
 
+void ADC_AttachContext(ADC_Context* ctx){ 
+	s_ctx = ctx; 
+}
 
 void ADC_Context_init(ADC_Context* ctx){
 	ctx->adc = ADC_UNIT;
@@ -62,7 +66,7 @@ adc_funk calibrateCurrentOffset_machine[CC_End] = {
 // ISR callback
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	if (hadc->Instance == hadc1.Instance){
-		ADC_Context* ctx = &adcCtx;
+		ADC_Context* ctx = s_ctx;
 		uint16_t* samples[DMA_Index_End] = {ctx->voltageSample, ctx->temp1Sample, ctx->temp2Sample};
 		if(ctx->dmaSampleCounter < SAMPLE_NUM){
 			for(DMA_Index i = DMA_Index_Vbus ;i < DMA_Index_End;i++){
@@ -74,7 +78,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 }
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance == ADC1) {
-		ADC_Context* ctx = &adcCtx;
+		ADC_Context* ctx = s_ctx;
 		if(ctx->currentSampleCounter < SAMPLE_NUM){
 			ctx->currentSample[ctx->currentSampleCounter] = HAL_ADCEx_InjectedGetValue(ADC_UNIT, ADC_INJECTED_RANK_1);
 			ctx->currentSampleCounter++;
@@ -87,7 +91,7 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance != ADC1){
 		return;
 	}
-	ADC_Context* ctx = &adcCtx;
+	ADC_Context* ctx = s_ctx;
 	uint16_t code = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
 	if (code > (uint16_t)hadc->Instance->HTR){
 		if (++ctx->oc_hits >= 3) {          // 3 برخورد پیاپی ⇒ HardStop
@@ -136,7 +140,7 @@ bool Temperture_Safety_Checker(ADC_Context* ctx){
 	return true;
 }
 float ADC_to_current(uint16_t adc){
-	ADC_Context* ctx = &adcCtx;
+	ADC_Context* ctx = s_ctx;
 	if(adc != 0){
 		uint16_t adcRealVal = (adc - ctx->currentOffset + 0.5f);
 		float current = ADCcounts_to_CurrentA(adcRealVal);
@@ -344,7 +348,7 @@ bool safatyCheck				(ADC_Context* ctx){
 	return true;
 }
 bool calibratingCurrent	(ADC_Context* ctx){
-	calibrateCurrentOffset_machine[calibrateMode](&adcCtx);
+	calibrateCurrentOffset_machine[calibrateMode](s_ctx);
 	if(calibrateMode == CC_Finishing){
 		return true;
 	}

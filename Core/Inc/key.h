@@ -46,7 +46,6 @@ typedef struct{
 	uint16_t GPIOPin;         /**< GPIO pin, e.g., GPIO_PIN_0 */
 	volatile KeyState state;  /**< Internal state for 2-bit tracking */
 }KeyPinConfig;
-extern KeyPinConfig keys[END_KEY];
 /* Exported functions --------------------------------------------------------*/
 /**
  * @brief Initialize key configurations.

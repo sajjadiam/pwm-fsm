@@ -63,7 +63,7 @@ typedef enum {
 typedef void (*adc_funk)(ADC_Context* ctx);
 
 //extern variables
-extern ADC_Context adcCtx;
+//extern ADC_Context adcCtx;
 //functions
 void ADC_Context_init		(ADC_Context* ctx);
 bool manual_ADC_Enable	(ADC_Context* ctx);
@@ -103,5 +103,5 @@ bool calibratingCurrent	(ADC_Context* ctx);
 bool adcDisable					(ADC_Context* ctx);
 bool initFinishing			(ADC_Context* ctx);
 //----------------------------------
-
+void ADC_AttachContext(ADC_Context* ctx);
 #endif // ADC_UTILS_H

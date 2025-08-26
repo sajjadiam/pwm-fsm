@@ -1,9 +1,11 @@
-#include "input_capture_utils.h"
+#include "app_ctx.h"
 #include "tim.h"
 #include <string.h>
 
-IC_Handler captureHndler[IC_END];
-
+static IC_Context* s_ic;
+void IC_AttachContext(IC_Context* ctx){
+	s_ic = ctx; 
+}
 void captureUnitInit(IC_Handler *cu ,TIM_HandleTypeDef *htim ,uint32_t channel){
 	cu->htim = htim;
 	cu->ch = channel;
@@ -13,14 +15,14 @@ void captureUnitInit(IC_Handler *cu ,TIM_HandleTypeDef *htim ,uint32_t channel){
 	cu->avg = 0;
 	memset(cu->buff,0,sizeof cu->buff);
 }
-void IC_Init(void){
-	captureUnitInit(&captureHndler[IC_CH3],&htim1,TIM_CHANNEL_3);
-	captureUnitInit(&captureHndler[IC_CH4],&htim1,TIM_CHANNEL_4);
+void IC_Init(IC_Context* ctx){
+	captureUnitInit(&ctx->ch[IC_CH3],&htim1,TIM_CHANNEL_3);
+	captureUnitInit(&ctx->ch[IC_CH4],&htim1,TIM_CHANNEL_4);
 }
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance == TIM1){
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3){
-			IC_Handler* cu = &captureHndler[IC_CH3];
+			IC_Handler* cu = &s_ic->ch[IC_CH3];
 			if (cu->armed && cu->count < SAMPLE_NUM) {
 				cu->buff[cu->count++] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
 				if (cu->count >= SAMPLE_NUM){ 
@@ -31,7 +33,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 			}
 		}
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4){
-			IC_Handler* cu = &captureHndler[IC_CH4];
+			IC_Handler* cu = &s_ic->ch[IC_CH4];
 			if (cu->armed && cu->count < SAMPLE_NUM) {
 				cu->buff[cu->count++] = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4);
 				if (cu->count >= SAMPLE_NUM){ 
@@ -43,7 +45,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 		}
 	}
 }
-void IC_processSample(IC_Handler *cu ,uint16_t len){
+void IC_processSample(IC_Context* ctx,uint16_t len){
+	IC_Handler* cu = ctx->ch;
 	uint8_t i;
 	const uint8_t sampleNumber = SAMPLE_NUM - 1;
 	while(len-- > 0){

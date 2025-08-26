@@ -1,5 +1,5 @@
 #include "fsm_init.h"
-#include "adc_utils.h"
+#include "app_ctx.h"
 
 volatile InitSub initMode = Init_DMA_Sampling;
 const SM_Init_func initMachine[Init_END] = {
@@ -11,34 +11,34 @@ const SM_Init_func initMachine[Init_END] = {
 //	[Init_Finishing]					= init_Finishing,
 };
 
-void init_DMA_Sampling			(void){
-	if(DMA_Sampling(&adcCtx) == false){
+void init_DMA_Sampling			(struct AppContext* app){
+	if(DMA_Sampling(&app->adc) == false){
 		return;
 	}
 	initMode = Init_DMA_Processing;
 }
-void init_DMA_Processing		(void){
-	if(DMA_Processing(&adcCtx) == false){
+void init_DMA_Processing		(struct AppContext* app){
+	if(DMA_Processing(&app->adc) == false){
 		return;
 	}
 	initMode = Init_safatyCheck;
 }
-void init_safatyCheck				(void){
-	if(safatyCheck(&adcCtx) == false){
+void init_safatyCheck				(struct AppContext* app){
+	if(safatyCheck(&app->adc) == false){
 		return;
 	}
 	initMode = Init_calibratingCurrent;
 }
-void init_calibratingCurrent(void){
-	if(calibratingCurrent(&adcCtx) == false){
+void init_calibratingCurrent(struct AppContext* app){
+	if(calibratingCurrent(&app->adc) == false){
 		return;
 	}
 	initMode = Init_adcDisable;
 }
-void init_adcDisable				(void){
-	if(adcDisable(&adcCtx) == false){
+void init_adcDisable				(struct AppContext* app){
+	if(adcDisable(&app->adc) == false){
 		return;
 	}
 }
-//void init_Finishing					(void);
+//void init_Finishing					(struct AppContext* app);
 //end of fsm_init.c 

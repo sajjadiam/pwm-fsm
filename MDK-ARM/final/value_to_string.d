@@ -2,6 +2,7 @@ final/value_to_string.o: ..\Core\Src\value_to_string.c \
   ..\Core\Inc\value_to_string.h C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdio.h ..\Core\Inc\pwm.h \
   C:\Keil_v5\ARM\ARMCLANG\include\math.h \
+  C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h \
   ..\Core\Inc\stm32f1xx_hal_conf.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc.h \
@@ -32,7 +33,6 @@ final/value_to_string.o: ..\Core\Src\value_to_string.c \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pwr.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim_ex.h \
-  ..\Drivers\STM32F1xx_HAL_Driver\Inc\pwm_hal.h ..\Core\Inc\pwm_fsm.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h ..\Core\Inc\pwm_config.h \
-  ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\adc_utils.h \
-  ..\Core\Inc\adc_utils_config.h ..\Core\Inc\time.h
+  ..\Drivers\STM32F1xx_HAL_Driver\Inc\pwm_hal.h ..\Core\Inc\pwm_config.h \
+  ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\time.h ..\Core\Inc\pwm_fsm.h \
+  ..\Core\Inc\fsm_events.h

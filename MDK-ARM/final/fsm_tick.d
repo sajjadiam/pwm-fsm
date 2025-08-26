@@ -1,4 +1,4 @@
-final/adc_utils.o: ..\Core\Src\adc_utils.c ..\Core\Inc\app_ctx.h \
+final/fsm_tick.o: ..\Core\Src\fsm_tick.c ..\Core\Inc\app_ctx.h \
   ..\Core\Inc\pwm.h C:\Keil_v5\ARM\ARMCLANG\include\math.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h \
@@ -37,5 +37,4 @@ final/adc_utils.o: ..\Core\Src\adc_utils.c ..\Core\Inc\app_ctx.h \
   ..\Core\Inc\fsm_events.h ..\Core\Inc\adc_utils.h \
   ..\Core\Inc\adc_utils_config.h ..\Core\Inc\input_capture_utils.h \
   ..\Core\Inc\key.h ..\Core\Inc\event_queue.h ..\Core\Inc\fsm_tick.h \
-  ..\Core\Inc\tim.h ..\Core\Inc\main.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\string.h ..\Core\Inc\adc.h
+  ..\Core\Inc\tim.h ..\Core\Inc\main.h

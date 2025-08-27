@@ -57,10 +57,7 @@ void ss_Processing		(struct AppContext* app){
 	softStartMode = SS_safatyCheck;
 }
 void ss_safatyCheck		(struct AppContext* app){
-	
-	if(safatyCheck(&app->adc) == false){
-		return;
-	}
+	safatyCheck(&app->adc);
 	softStartMode = SS_tunPower;
 }
 void ss_tun_power			(struct AppContext* app){

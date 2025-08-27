@@ -711,6 +711,11 @@
               <FileType>1</FileType>
               <FilePath>..\Core\Src\event_queue.c</FilePath>
             </File>
+            <File>
+              <FileName>digital_inpuet.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\digital_inpuet.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

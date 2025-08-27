@@ -37,5 +37,6 @@ final/pwm.o: ..\Core\Src\pwm.c ..\Core\Inc\app_ctx.h ..\Core\Inc\pwm.h \
   ..\Core\Inc\fsm_events.h ..\Core\Inc\adc_utils.h \
   ..\Core\Inc\adc_utils_config.h ..\Core\Inc\input_capture_utils.h \
   ..\Core\Inc\key.h ..\Core\Inc\event_queue.h ..\Core\Inc\fsm_tick.h \
-  ..\Core\Inc\tim.h ..\Core\Inc\main.h ..\Core\Inc\adc.h \
+  ..\Core\Inc\tim.h ..\Core\Inc\main.h ..\Core\Inc\digital_inpuet.h \
+  ..\Core\Inc\mechanical_part.h ..\Core\Inc\adc.h \
   C:\Keil_v5\ARM\ARMCLANG\include\string.h

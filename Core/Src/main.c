@@ -123,6 +123,7 @@ int main(void)
 	ADC_AttachContext(&app.adc);
 	IC_AttachContext(&app.ic);
 	PWM_AttachContext(&app.pwm);
+	DI_AttachContext(&app.d_input);
 	
 	ResetFlag_t rf = Read_Reset_Cause_F1();
 	PWM_FSM_Init(&app);                         // ماشین حالت PWM را در حالت STANDBY قرار می‌دهد
@@ -141,9 +142,9 @@ int main(void)
 	SevenSeg_Init(&h7seg);
 	while (1)
   {
-		
+		systemSaftyCheker(&app);
 		if(app.flags.hardFault){
-			app.flags.hardFault = false;
+			app.flags.hardFault = 0;
 			PWM_FSM_HandleEvent(&app,Evt_HardwareFault);
 		}
 		else{
@@ -162,7 +163,7 @@ int main(void)
 			SevenSeg_Update(&h7seg);
 		}
 		if(app.flags.keyRead){
-			app.flags.keyRead = false;
+			app.flags.keyRead = 0;
 			keyAct[app.pwm.currentState](&app);
 		}
 	
@@ -245,13 +246,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){ //1 us timer
 	}
 }
 //timers NVIC callback
-//
-
-
-//
-//---------------------------------------------------
-//convert temperture values to sting for seven segment 
-
+void systemSaftyCheker(AppContext* app){
+	
+}
 
 /* USER CODE END 4 */
 

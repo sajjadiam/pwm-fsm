@@ -7,16 +7,20 @@
 #include "key.h"
 #include "event_queue.h"
 #include "fsm_tick.h"
+#include "digital_inpuet.h"
+#include "mechanical_part.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct{
-    volatile unsigned tick      :1;
-    volatile unsigned keyRead   :1;
-    volatile unsigned segUpdate :1;
-    volatile unsigned hardFault :1;
+	volatile unsigned tick      			:1;
+	volatile unsigned keyRead   			:1;
+	volatile unsigned segUpdate 			:1;
+	volatile unsigned hardFault 			:1;
+	
+	
 }AppFlags;
 
 typedef struct AppContext{
@@ -30,7 +34,8 @@ typedef struct AppContext{
 	// صف رویداد و کلیدها
 	EventQueue_t queue;
 	KeyPinConfig keys[END_KEY];
-
+	DI_PinConfig d_input;
+	Mechanical_Part m_parts[MECHANICAL_PARTS_END];
 	// فلگ‌ها و تایمر FSM
 	AppFlags flags;
 	
@@ -39,6 +44,9 @@ typedef struct AppContext{
 	uint32_t key_tick_us;
 	uint32_t sevenSeg_tick_us;
 }AppContext;
+//--------------helper functions
+void systemSaftyCheker(AppContext* app);
+
 #ifdef __cplusplus
 }
 #endif

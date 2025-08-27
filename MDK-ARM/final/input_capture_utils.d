@@ -38,5 +38,5 @@ final/input_capture_utils.o: ..\Core\Src\input_capture_utils.c \
   ..\Core\Inc\fsm_events.h ..\Core\Inc\adc_utils.h \
   ..\Core\Inc\adc_utils_config.h ..\Core\Inc\input_capture_utils.h \
   ..\Core\Inc\key.h ..\Core\Inc\event_queue.h ..\Core\Inc\fsm_tick.h \
-  ..\Core\Inc\tim.h ..\Core\Inc\main.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\string.h
+  ..\Core\Inc\tim.h ..\Core\Inc\main.h ..\Core\Inc\digital_inpuet.h \
+  ..\Core\Inc\mechanical_part.h C:\Keil_v5\ARM\ARMCLANG\include\string.h

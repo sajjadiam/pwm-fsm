@@ -108,12 +108,14 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc){
 // 3) ترکیب برای manual read once
 
 
-bool DC_Voltage_Safety_Checker(ADC_Context* ctx){
+void DC_Voltage_Safety_Checker(ADC_Context* ctx){
 	float voltage = ADC_to_voltage(ctx->sampleMean[ADC_Channel_Voltage]);
-	if(voltage < 250 || voltage > 345){
-		return false;
+	if			(voltage < 250){
+		ctx->flags.underVoltage = 1;
 	}
-	return true;
+	else if	(voltage > 345){
+		ctx->flags.overVoltage 	= 1;
+	}
 }
 float ADC_to_voltage(uint16_t adc){
 	if(adc != 0){
@@ -131,13 +133,12 @@ float ADC_to_temperture(uint16_t adc){
 	}
 	return 0;
 }
-bool Temperture_Safety_Checker(ADC_Context* ctx){
+void Temperture_Safety_Checker(ADC_Context* ctx){
 	float temperture1 = ADC_to_temperture(ctx->sampleMean[ADC_Channel_Temp1]);
 	float temperture2 = ADC_to_temperture(ctx->sampleMean[ADC_Channel_Temp2]);
 	if(temperture1 > 75 || temperture2 > 75){
-		return false;
+		ctx->flags.overTemperture = 1;
 	}
-	return true;
 }
 float ADC_to_current(uint16_t adc){
 	ADC_Context* ctx = s_ctx;
@@ -275,24 +276,22 @@ void CC_Func_SetAWD						(ADC_Context* ctx){
 	return;
 }
 void CC_Func_Finishing				(ADC_Context* ctx){
-	//do noting
+	ctx->flags.calibrateDone = 1;
 }
 //end current calibrate offset
-bool DMA_Sampling				(ADC_Context* ctx){
+void DMA_Sampling				(ADC_Context* ctx){
 	if(ctx->dmaSampleCounter >= SAMPLE_NUM){
 		ctx->dmaSampleReady = 1;
-		return true;
+		return;
 	}
-	return false;
 }
-bool INJECT_Sampling		(ADC_Context* ctx){
+void INJECT_Sampling		(ADC_Context* ctx){
 	if(ctx->currentSampleCounter >= SAMPLE_NUM){
 		ctx->currentSampleReady = 1;
-		return true;
+		return;
 	}
-	return false;
 }
-bool DMA_Processing			(ADC_Context* ctx){
+void DMA_Processing			(ADC_Context* ctx){
 	uint32_t sampleSum = 0;
 	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
 		sampleSum += ctx->voltageSample[i];
@@ -308,17 +307,15 @@ bool DMA_Processing			(ADC_Context* ctx){
 		sampleSum += ctx->temp2Sample[i];
 	}
 	ctx->sampleMean[ADC_Channel_Temp2] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
-	return true;
 }
-bool INJECT_Processing	(ADC_Context* ctx){
+void INJECT_Processing	(ADC_Context* ctx){
 	uint32_t sampleSum = 0;
 	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
 		sampleSum += ctx->currentSample[i];
 	}
 	ctx->sampleMean[ADC_Channel_Curent] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
-	return true;
 }
-bool ADC_Processing			(ADC_Context* ctx){
+void ADC_Processing			(ADC_Context* ctx){
 	int32_t sampleSum = 0;
 	for(uint16_t i = 0;i < SAMPLE_NUM;i++){
 		sampleSum += ctx->currentSample[i];
@@ -339,22 +336,17 @@ bool ADC_Processing			(ADC_Context* ctx){
 		sampleSum += ctx->temp2Sample[i];
 	}
 	ctx->sampleMean[ADC_Channel_Temp2] = (uint16_t)((sampleSum / SAMPLE_NUM) + 0.5f);
-	return true;
 }
-bool safatyCheck				(ADC_Context* ctx){
-	if(DC_Voltage_Safety_Checker(ctx) == false || Temperture_Safety_Checker(ctx) == false){
-		return false;
-	}
-	return true;
+void safatyCheck				(ADC_Context* ctx){
+	DC_Voltage_Safety_Checker(ctx);
+	Temperture_Safety_Checker(ctx);
 }
-bool calibratingCurrent	(ADC_Context* ctx){
+void calibratingCurrent	(ADC_Context* ctx){
 	calibrateCurrentOffset_machine[calibrateMode](s_ctx);
-	if(calibrateMode == CC_Finishing){
-		return true;
-	}
-	return false;
 }
-bool adcDisable					(ADC_Context* ctx){
-	return manual_ADC_Disable(ctx);
+void adcDisable					(ADC_Context* ctx){
+	if(manual_ADC_Disable(ctx) == true){
+		
+	}
 }
 //end of adc_utils.c

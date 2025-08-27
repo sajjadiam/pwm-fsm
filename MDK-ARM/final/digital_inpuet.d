@@ -1,7 +1,5 @@
-final/fsm_soft_start.o: ..\Core\Src\fsm_soft_start.c \
-  ..\Core\Inc\fsm_soft_start.h ..\Core\Inc\app_ctx.h ..\Core\Inc\pwm.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\math.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h \
+final/digital_inpuet.o: ..\Core\Src\digital_inpuet.c \
+  ..\Core\Inc\digital_inpuet.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h \
   ..\Core\Inc\stm32f1xx_hal_conf.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc.h \
@@ -33,10 +31,4 @@ final/fsm_soft_start.o: ..\Core\Src\fsm_soft_start.c \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pwr.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim_ex.h \
-  ..\Drivers\STM32F1xx_HAL_Driver\Inc\pwm_hal.h ..\Core\Inc\pwm_config.h \
-  ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\time.h ..\Core\Inc\pwm_fsm.h \
-  ..\Core\Inc\fsm_events.h ..\Core\Inc\adc_utils.h \
-  ..\Core\Inc\adc_utils_config.h ..\Core\Inc\input_capture_utils.h \
-  ..\Core\Inc\key.h ..\Core\Inc\event_queue.h ..\Core\Inc\fsm_tick.h \
-  ..\Core\Inc\tim.h ..\Core\Inc\main.h ..\Core\Inc\digital_inpuet.h \
-  ..\Core\Inc\mechanical_part.h
+  ..\Core\Inc\main.h

@@ -40,6 +40,7 @@
 "final\input_capture_utils.o"
 "final\fsm_tick.o"
 "final\event_queue.o"
+"final\digital_inpuet.o"
 --strict --scatter "final\final.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

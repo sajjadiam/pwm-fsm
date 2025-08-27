@@ -23,9 +23,17 @@ static inline float ADCcounts_to_VoltageV(uint16_t counts) {
 }
 
 //typedefs
+typedef struct{
+	volatile unsigned	underVoltage 		:1;
+	volatile unsigned	overVoltage 		:1;
+	volatile unsigned	overCurrent 		:1;
+	volatile unsigned	overTemperture 	:1;
+	volatile unsigned	calibrateDone	 	:1;
+}Flags;
 typedef uint16_t Counter;
 typedef struct{
 	ADC_HandleTypeDef* 	adc;
+	Flags								flags;
 	uint16_t 						dma_buffer[DMA_Index_End];
 	//samples
 	uint16_t 						currentSample[SAMPLE_NUM_MAX];
@@ -64,8 +72,8 @@ void ADC_Context_init		(ADC_Context* ctx);
 bool manual_ADC_Enable	(ADC_Context* ctx);
 bool manual_ADC_Disable	(ADC_Context* ctx);
 //----------------------------------
-bool DC_Voltage_Safety_Checker(ADC_Context* ctx);
-bool Temperture_Safety_Checker(ADC_Context* ctx);
+void DC_Voltage_Safety_Checker(ADC_Context* ctx);
+void Temperture_Safety_Checker(ADC_Context* ctx);
 //-----------------------------------------
 float ADC_to_voltage(uint16_t adc);
 float ADC_to_temperture(uint16_t adc);
@@ -84,14 +92,14 @@ void CC_Func_ResetTrig				(ADC_Context* ctx);
 void CC_Func_SetAWD						(ADC_Context* ctx);
 void CC_Func_Finishing				(ADC_Context* ctx);
 //----------------------------
-bool DMA_Sampling				(ADC_Context* ctx);
-bool INJECT_Sampling		(ADC_Context* ctx);
-bool DMA_Processing			(ADC_Context* ctx);
-bool INJECT_Processing	(ADC_Context* ctx);
-bool ADC_Processing			(ADC_Context* ctx);
-bool safatyCheck				(ADC_Context* ctx);
-bool calibratingCurrent	(ADC_Context* ctx);
-bool adcDisable					(ADC_Context* ctx);
+void DMA_Sampling				(ADC_Context* ctx);
+void INJECT_Sampling		(ADC_Context* ctx);
+void DMA_Processing			(ADC_Context* ctx);
+void INJECT_Processing	(ADC_Context* ctx);
+void ADC_Processing			(ADC_Context* ctx);
+void safatyCheck				(ADC_Context* ctx);
+void calibratingCurrent	(ADC_Context* ctx);
+void adcDisable					(ADC_Context* ctx);
 bool initFinishing			(ADC_Context* ctx);
 //----------------------------------
 void ADC_AttachContext(ADC_Context* ctx);

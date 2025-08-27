@@ -11,8 +11,8 @@ extern "C" {
 #define SAMPLE_NUM			20
 
 typedef enum{
-	IC_CH3	= 0,
-	IC_CH4,
+	IC_CH_I	= 0,
+	IC_CH_V,
 	IC_END,
 }IC_CH;
 typedef struct{

@@ -40,7 +40,8 @@ final/main.o: ..\Core\Src\main.c ..\Core\Inc\main.h \
   ..\Core\Inc\fsm_events.h ..\Core\Inc\adc_utils.h \
   ..\Core\Inc\adc_utils_config.h ..\Core\Inc\input_capture_utils.h \
   ..\Core\Inc\key.h ..\Core\Inc\event_queue.h ..\Core\Inc\fsm_tick.h \
+  ..\Core\Inc\digital_inpuet.h ..\Core\Inc\mechanical_part.h \
   ..\Core\Inc\sevenseg.h C:\Keil_v5\ARM\ARMCLANG\include\assert.h \
   ..\Core\Inc\sevenseg_pins.h ..\Core\Inc\sevenseg_map.h \
   ..\Core\Inc\sevenseg_config.h ..\Core\Inc\sevenseg_types.h \
-  ..\Core\Inc\value_to_string.h ..\Core\Inc\mechanical_part.h
+  ..\Core\Inc\value_to_string.h

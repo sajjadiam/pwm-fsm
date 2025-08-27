@@ -16,7 +16,7 @@ void resonanceSweep_sampling			(struct AppContext* app){
 	ADC_Context* ctx = &app->adc;
 	DMA_Sampling(ctx);
 	INJECT_Sampling(ctx);
-	if(app->ic.ch[IC_CH3].ready && app->ic.ch[IC_CH4].ready && ctx->dmaSampleReady && ctx->currentSampleReady){
+	if(app->ic.ch[IC_CH_I].ready && app->ic.ch[IC_CH_V].ready && ctx->dmaSampleReady && ctx->currentSampleReady){
 		resonanceSweepMode = RS_processing;
 	}
 }

@@ -38,4 +38,5 @@ final/fsm_init.o: ..\Core\Src\fsm_init.c ..\Core\Inc\fsm_init.h \
   ..\Core\Inc\fsm_events.h ..\Core\Inc\adc_utils.h \
   ..\Core\Inc\adc_utils_config.h ..\Core\Inc\input_capture_utils.h \
   ..\Core\Inc\key.h ..\Core\Inc\event_queue.h ..\Core\Inc\fsm_tick.h \
-  ..\Core\Inc\tim.h ..\Core\Inc\main.h
+  ..\Core\Inc\tim.h ..\Core\Inc\main.h ..\Core\Inc\digital_inpuet.h \
+  ..\Core\Inc\mechanical_part.h

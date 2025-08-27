@@ -37,5 +37,6 @@ final/pwm_fsm.o: ..\Core\Src\pwm_fsm.c ..\Core\Inc\pwm_fsm.h \
   ..\Core\Inc\pwm_deadtime.h ..\Core\Inc\time.h ..\Core\Inc\adc_utils.h \
   ..\Core\Inc\adc_utils_config.h ..\Core\Inc\input_capture_utils.h \
   ..\Core\Inc\key.h ..\Core\Inc\event_queue.h ..\Core\Inc\fsm_tick.h \
-  ..\Core\Inc\tim.h ..\Core\Inc\main.h ..\Core\Inc\fsm_init.h \
+  ..\Core\Inc\tim.h ..\Core\Inc\main.h ..\Core\Inc\digital_inpuet.h \
+  ..\Core\Inc\mechanical_part.h ..\Core\Inc\fsm_init.h \
   ..\Core\Inc\fsm_soft_start.h ..\Core\Inc\fsm_resonance_sweep.h

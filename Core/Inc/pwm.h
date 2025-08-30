@@ -64,6 +64,7 @@ typedef struct{
 	float 							current;									// from adc chanel
 	uint32_t 						currentFreq;						// from arr
 	uint32_t 						targetFreq;						// clculate from 2 chanel of input capture
+	uint32_t						phase_offset_vc_deg;
 	uint16_t						targetPower;
 	uint16_t						currentPower;
 	uint8_t 						currentDeadTime;				// calculate from dtg register 

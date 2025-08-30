@@ -19,8 +19,9 @@ typedef struct{
 	TIM_HandleTypeDef 	*htim;
 	uint32_t						ch;
 	uint32_t 						buff[SAMPLE_NUM_MAX];
+	volatile uint32_t		avg;
+	volatile uint32_t   lastCapture;
 	volatile uint16_t 	count;
-	volatile uint16_t		avg;
 	struct{
 		volatile 					uint8_t armed		:1;
 		volatile 					uint8_t ready		:1;
@@ -35,9 +36,10 @@ void IC_AttachContext(IC_Context* ctx);
 void captureUnitInit(IC_Handler *cu ,TIM_HandleTypeDef *htim ,uint32_t channel);
 void IC_Init(IC_Context* ctx);
 void IC_getSample(IC_Context* ctx ,uint16_t len);
+void IC_getSample(IC_Context* ctx ,uint16_t len);
 void IC_processSample(IC_Context* ctx ,uint16_t len);
-
-
+float wrap180(float d);
+float calc_phase_deg(IC_Context* ctx);
 
 #ifdef __cplusplus
 }

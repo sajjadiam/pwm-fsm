@@ -27,13 +27,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include <stdio.h>
 #include "app_ctx.h"
-#include "key.h"
-#include "pwm.h"
 #include "sevenseg.h"
 #include "value_to_string.h"
-#include "mechanical_part.h"
-#include "fsm_tick.h"
+#include "fsm_resonance_sweep.h"
+#include <math.h> 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -83,6 +82,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 //-----------------------------pwm function prototype start--------------------------
 void PWM_Command_Key_init(volatile KeyPinConfig* key);
+int _write(int file, char *ptr, int len);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -118,7 +118,7 @@ int main(void)
   MX_TIM2_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-	app.counterTimer = &htim2;
+	/*app.counterTimer = &htim2;
 	FSM_Tick_Attach(&app);
 	ADC_AttachContext(&app.adc);
 	IC_AttachContext(&app.ic);
@@ -129,7 +129,7 @@ int main(void)
 	PWM_FSM_Init(&app);                         // ماشین حالت PWM را در حالت STANDBY قرار می‌دهد
 	SevenSeg_Init(&h7seg);                  // راه‌اندازی ۷‑سگمنت، نور کم
 	PWM_Command_Key_init(&app.keys[PWM_COMMMAND_KEY]); // کلید فرمان Start با دیبانس داخلی
-	IWDG_Start_F1(1000, 40000);
+	IWDG_Start_F1(1000, 40000);*/
 	//Mechnical_Part_Init(mechParts,MECHANICAL_PARTS_END);
 	//PWM_FSM_Init();
 	//PWM_Command_Key_init(&keys[PWM_COMMMAND_KEY]);
@@ -138,10 +138,21 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	
-	SevenSeg_Init(&h7seg);
+	memset(&app, 0, sizeof app);
+	IC_AttachContext(&app.ic);
+  IC_Init(&app.ic);
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3);
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4);
+	//SevenSeg_Init(&h7seg);
+	if(Calibrate_PhaseOffset(&app,200) == true){
+			int32_t mdeg = (int32_t)lroundf(app.pwm.phase_offset_vc_deg * 1000.0f);
+        printf("Calib : offset = %d deg\r\n",mdeg);
+    } else {
+        printf("Calibration failed (timeout?)\r\n");
+    }
 	while (1)
   {
+		/*
 		systemSaftyCheker(&app);
 		if(app.flags.hardFault){
 			app.flags.hardFault = 0;
@@ -165,7 +176,7 @@ int main(void)
 		if(app.flags.keyRead){
 			app.flags.keyRead = 0;
 			keyAct[app.pwm.currentState](&app);
-		}
+		}*/
 	
     /* USER CODE END WHILE */
 
@@ -249,7 +260,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){ //1 us timer
 void systemSaftyCheker(AppContext* app){
 	
 }
-
+//------------------------------------
+int _write(int file, char *ptr, int len){
+    for(int i=0;i<len;i++){
+        ITM_SendChar((uint32_t)*ptr++);
+    }
+    return len;
+}
 /* USER CODE END 4 */
 
 /**

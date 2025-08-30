@@ -32,7 +32,8 @@ final/main.o: ..\Core\Src\main.c ..\Core\Inc\main.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim_ex.h \
   ..\Core\Inc\adc.h ..\Core\Inc\dma.h ..\Core\Inc\iwdg.h \
   ..\Core\Inc\tim.h ..\Core\Inc\gpio.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\string.h ..\Core\Inc\app_ctx.h \
+  C:\Keil_v5\ARM\ARMCLANG\include\string.h \
+  C:\Keil_v5\ARM\ARMCLANG\include\stdio.h ..\Core\Inc\app_ctx.h \
   ..\Core\Inc\pwm.h C:\Keil_v5\ARM\ARMCLANG\include\math.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\pwm_hal.h ..\Core\Inc\pwm_config.h \
@@ -44,4 +45,4 @@ final/main.o: ..\Core\Src\main.c ..\Core\Inc\main.h \
   ..\Core\Inc\sevenseg.h C:\Keil_v5\ARM\ARMCLANG\include\assert.h \
   ..\Core\Inc\sevenseg_pins.h ..\Core\Inc\sevenseg_map.h \
   ..\Core\Inc\sevenseg_config.h ..\Core\Inc\sevenseg_types.h \
-  ..\Core\Inc\value_to_string.h
+  ..\Core\Inc\value_to_string.h ..\Core\Inc\fsm_resonance_sweep.h

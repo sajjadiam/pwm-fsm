@@ -1,7 +1,8 @@
 final/fsm_resonance_sweep.o: ..\Core\Src\fsm_resonance_sweep.c \
-  ..\Core\Inc\fsm_resonance_sweep.h ..\Core\Inc\app_ctx.h \
-  ..\Core\Inc\pwm.h C:\Keil_v5\ARM\ARMCLANG\include\math.h \
+  ..\Core\Inc\fsm_resonance_sweep.h \
   C:\Keil_v5\ARM\ARMCLANG\include\stdbool.h \
+  C:\Keil_v5\ARM\ARMCLANG\include\stdint.h ..\Core\Inc\app_ctx.h \
+  ..\Core\Inc\pwm.h C:\Keil_v5\ARM\ARMCLANG\include\math.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h \
   ..\Core\Inc\stm32f1xx_hal_conf.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc.h \
@@ -9,7 +10,6 @@ final/fsm_resonance_sweep.o: ..\Core\Src\fsm_resonance_sweep.c \
   ..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h \
   ..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xb.h \
   ..\Drivers\CMSIS\Include\core_cm3.h \
-  C:\Keil_v5\ARM\ARMCLANG\include\stdint.h \
   C:\Users\Electronic\Desktop\pwm1\final\Drivers\CMSIS\Include\cmsis_version.h \
   C:\Users\Electronic\Desktop\pwm1\final\Drivers\CMSIS\Include\cmsis_compiler.h \
   C:\Users\Electronic\Desktop\pwm1\final\Drivers\CMSIS\Include\cmsis_armclang.h \

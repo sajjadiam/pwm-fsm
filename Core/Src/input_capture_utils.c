@@ -19,6 +19,16 @@ void IC_Init(IC_Context* ctx){
 	captureUnitInit(&ctx->ch[IC_CH_I],&htim1,TIM_CHANNEL_3);
 	captureUnitInit(&ctx->ch[IC_CH_V],&htim1,TIM_CHANNEL_4);
 }
+void IC_getSample(IC_Context* ctx ,uint16_t len){
+    IC_Handler* cu = ctx->ch;
+    while(len-- > 0){
+        cu->count = 0;
+        cu->armed = 1;
+        cu->ready = 0;
+        // (اختیاری) memset(cu->buff, 0, sizeof cu->buff);
+        cu++;
+    }
+}
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance == TIM1){
 		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3){
@@ -56,9 +66,28 @@ void IC_processSample(IC_Context* ctx,uint16_t len){
 				: ((cu->htim->Init.Period + 1u) - cu->buff[i] + cu->buff[i + 1]));
 		}
 		cu->avg = sampleSum / sampleNumber;
+		cu->lastCapture = cu->buff[sampleNumber];
 		cu->ready = 0;
 		cu++;
 	}
 }
+float wrap180(float d){
+	if(d > 180.0f){
+		d -= 360.0f;
+	}
+	else if(d < -180.0f){
+		d += 360.0f;
+	}
+	return d;
+}
+float calc_phase_deg(IC_Context* ctx){
+	const uint32_t period = ctx->ch[IC_CH_V].htim->Init.Period + 1u;
+	uint32_t Tv = ctx->ch[IC_CH_V].avg;                // دوره ولتاژ (میانگین)
+	uint32_t lastV = ctx->ch[IC_CH_V].lastCapture;
+	uint32_t lastI = ctx->ch[IC_CH_I].lastCapture;
 
+	uint32_t d = (lastV >= lastI) ? (lastV - lastI) : (period - lastI + lastV);
+	float phase = ((float)d / (float)Tv) * 360.0f; // فاز ولتاژ نسبت به جریان
+	return wrap180(phase);
+}
 //end of input_capture_utils.c

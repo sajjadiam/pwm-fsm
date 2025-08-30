@@ -5,6 +5,9 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+#include <stdint.h>
+
 struct AppContext;
 typedef enum{
 	RS_sampling		= 0,
@@ -24,7 +27,7 @@ void resonanceSweep_processing		(struct AppContext* app);
 void resonanceSweep_safatyCheck		(struct AppContext* app);
 void resonanceSweep_settingChanges(struct AppContext* app);
 void resonanceSweep_Finishing			(struct AppContext* app);
-
+bool Calibrate_PhaseOffset(struct AppContext* app, uint16_t N);
 #ifdef __cplusplus
 }
 #endif
